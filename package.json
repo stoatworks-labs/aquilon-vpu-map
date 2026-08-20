@@ -1,0 +1,31 @@
+{
+  "name": "aquilon-vpu-map",
+  "version": "0.1.0",
+  "description": "See how an Analog Way LivePremier allocates its VPU mixers across screens, layers and slices.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Stoatworks Labs",
+  "homepage": "https://github.com/stoatworks-labs/aquilon-vpu-map",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stoatworks-labs/aquilon-vpu-map.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "keywords": [
+    "analog-way",
+    "livepremier",
+    "aquilon",
+    "awj",
+    "vpu",
+    "video",
+    "broadcast"
+  ]
+}

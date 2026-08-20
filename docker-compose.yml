@@ -1,0 +1,11 @@
+services:
+  aquilon-vpu-map:
+    build: .
+    image: ghcr.io/stoatworks-labs/aquilon-vpu-map:latest
+    container_name: aquilon-vpu-map
+    restart: unless-stopped
+    ports:
+      - "8531:8531"
+    environment:
+      # Address the form starts on; editable in the UI.
+      AQUILON_IP: "192.168.2.140"

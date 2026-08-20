@@ -1,0 +1,1745 @@
+{
+ "$schema": "aquilon-vpu-map/snapshot/1",
+ "capturedAt": "2026-08-20T16:47:00Z",
+ "source": {
+  "kind": "device",
+  "dev": "NLC_C",
+  "label": "AQUILON",
+  "host": "redacted",
+  "firmware": "6.2.x"
+ },
+ "note": "Recorded from a real Aquilon C over AWJ. Reads only; no writes were issued.",
+ "device": "1",
+ "current": {
+  "PROC_1_MIXER_1": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM5",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM7",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_2": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_3": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_4": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_5": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM3",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_6": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_7": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_8": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_9": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM5"
+    },
+    "B": {
+     "memoryFill": "SM3",
+     "memoryCut": "SM7"
+    }
+   }
+  },
+  "PROC_1_MIXER_10": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_11": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_12": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_13": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 4,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_14": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 5,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_15": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 6,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_16": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 7,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_1": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM5",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM7",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_2": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_3": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_4": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_5": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM3",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_6": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_7": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_8": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_9": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM5",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM7",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_10": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_11": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_12": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_13": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_14": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_15": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_16": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_3_MIXER_1": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_2": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_3": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_4": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_5": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_6": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_7": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_8": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_9": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_10": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_11": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_12": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_13": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_14": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_15": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_16": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_1": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_2": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_3": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_4": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_5": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_6": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_7": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_8": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_9": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_10": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_11": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_12": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_13": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_14": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_15": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_16": {
+   "isAvailable": false
+  }
+ },
+ "new": {
+  "PROC_1_MIXER_1": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM5",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM7",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_2": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_3": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_4": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_5": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM3",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_6": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_7": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_8": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S2",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_9": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM5"
+    },
+    "B": {
+     "memoryFill": "SM3",
+     "memoryCut": "SM7"
+    }
+   }
+  },
+  "PROC_1_MIXER_10": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_11": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_12": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_13": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 4,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_14": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 5,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_15": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 6,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_1_MIXER_16": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 7,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "1"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_1": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM5",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM7",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_2": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_3": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_4": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S3",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "1",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_5": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM3",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_6": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_7": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_8": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_9": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM5",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM7",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_10": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 1,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_11": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 2,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_12": {
+   "isAvailable": true,
+   "isEnabled": true,
+   "usedInScreen": "S4",
+   "usedInLayer": "1",
+   "channel": 0,
+   "slice": 3,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_13": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_14": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_15": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_2_MIXER_16": {
+   "isAvailable": true,
+   "isEnabled": false,
+   "usedInScreen": "S1",
+   "usedInLayer": "NATIVE",
+   "channel": 0,
+   "slice": 0,
+   "capability": "4K",
+   "seamlessCapa": true,
+   "mixerAllocation": {
+    "usedOnOutPipe1": "NONE",
+    "usedOnOutPipe2": "NONE"
+   },
+   "scalers": {
+    "A": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    },
+    "B": {
+     "memoryFill": "SM1",
+     "memoryCut": "SM1"
+    }
+   }
+  },
+  "PROC_3_MIXER_1": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_2": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_3": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_4": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_5": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_6": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_7": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_8": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_9": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_10": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_11": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_12": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_13": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_14": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_15": {
+   "isAvailable": false
+  },
+  "PROC_3_MIXER_16": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_1": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_2": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_3": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_4": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_5": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_6": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_7": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_8": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_9": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_10": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_11": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_12": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_13": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_14": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_15": {
+   "isAvailable": false
+  },
+  "PROC_4_MIXER_16": {
+   "isAvailable": false
+  }
+ }
+}

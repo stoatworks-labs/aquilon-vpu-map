@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['18', '22']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # No dependencies and no build step, so there is nothing to install.
+      - name: test
+        run: npm test
+
+  docker:
+    # There is no container runtime on the dev machine, so this build is the
+    # only proof the Dockerfile is valid. Build only — publishing is separate.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: build image
+        run: docker build -t aquilon-vpu-map:ci .
+      - name: it starts and answers /api/health
+        run: |
+          docker run -d --name vpu -p 8531:8531 aquilon-vpu-map:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8531/api/health; then echo; exit 0; fi
+            sleep 1
+          done
+          echo "did not become healthy"; docker logs vpu; exit 1

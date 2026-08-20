@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aquilon VPU Map</title>
+<meta name="description" content="See how an Analog Way LivePremier allocates its VPU mixers across screens, layers and slices.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="eyebrow">
+      <span class="dot" id="statusDot" data-state="idle"></span>
+      <span id="statusText">Not connected</span>
+      <span id="sourceText" hidden></span>
+    </div>
+    <h1>Aquilon VPU Map</h1>
+    <p class="standfirst">
+      Every layer on a LivePremier costs physical mixing hardware. This shows where
+      that hardware actually went &mdash; read live from the device over AWJ.
+    </p>
+  </header>
+
+  <!-- connection -->
+  <form class="conn" id="connForm" autocomplete="off">
+    <div class="field">
+      <label for="ip">Aquilon address</label>
+      <input id="ip" name="ip" type="text" inputmode="url" spellcheck="false"
+             placeholder="192.168.2.140" value="192.168.2.140">
+    </div>
+    <div class="field narrow">
+      <label for="device">Device</label>
+      <select id="device" name="device">
+        <option value="1" selected>1 &mdash; Master</option>
+        <option value="2">2 &mdash; Follower 1</option>
+        <option value="3">3 &mdash; Follower 2</option>
+        <option value="4">4 &mdash; Follower 3</option>
+      </select>
+    </div>
+    <button class="btn primary" type="submit" id="readBtn">Read device</button>
+    <button class="btn" type="button" id="sampleBtn">Load recorded capture</button>
+  </form>
+
+  <p class="conn-note" id="connNote">
+    Reads only &mdash; this tool never writes to the device. AWJ is TCP&nbsp;10606,
+    so the read is made by this app's own server, not from the browser.
+  </p>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <main id="results" hidden>
+
+    <div class="stats" id="stats"></div>
+
+    <section>
+      <div class="head">
+        <h2>Chassis</h2>
+        <p>
+          Four processors of sixteen mixers each. Colour is the screen a mixer serves;
+          the number under it is which slice of that screen it carries.
+        </p>
+      </div>
+      <div class="scroller">
+        <div class="chassis" id="chassis"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="head">
+        <h2>What each screen costs</h2>
+        <p>
+          A layer is not one mixer &mdash; it is a run of them, one per slice.
+          The widest layer on the box is the one that decides whether a show fits.
+        </p>
+      </div>
+      <div class="budget" id="budget"></div>
+    </section>
+
+    <section id="diffSection" hidden>
+      <div class="head">
+        <h2>Staged changes</h2>
+        <p>
+          The device keeps a running allocation and a staged one. These mixers differ
+          between the two &mdash; this is what applying the pending configuration would cost.
+        </p>
+      </div>
+      <div class="budget" id="diff"></div>
+    </section>
+
+    <section>
+      <div class="head">
+        <h2>Detail</h2>
+        <p>Every fitted mixer, as reported. All of these properties are read-only on the device.</p>
+      </div>
+      <div class="scroller">
+        <table class="tbl" id="detail"></table>
+      </div>
+    </section>
+
+  </main>
+
+  <section class="about">
+    <div class="head">
+      <h2>What a VPU mixer is</h2>
+    </div>
+    <div class="note">
+      <p>
+        A <strong>VPU mixer</strong> is the physical mixing and scaling resource a
+        LivePremier allocates to a screen and layer. An Aquilon has up to four
+        processors of sixteen mixers &mdash; <strong>64</strong> in total, though most
+        chassis are part-populated.
+      </p>
+      <p>
+        A layer too wide for a single mixer is split across several, each carrying one
+        <strong>slice</strong>. That is why an eight-slice background can consume an
+        entire processor board on its own, and why layer count alone never tells you
+        whether a configuration will fit.
+      </p>
+      <p>
+        The device reports this map read-only, under
+        <code>preconfig/resources/{current|new}/status/mapping</code>. Everything this
+        tool shows is that map.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<script src="./support-footer.js" defer
+        data-app="Aquilon VPU Map"
+        data-repo="https://github.com/stoatworks-labs/aquilon-vpu-map"
+        data-note="Reads an Analog Way LivePremier's VPU mixer allocation over AWJ. Reads only — it never writes to the device."></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
