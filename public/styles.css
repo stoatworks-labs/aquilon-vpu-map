@@ -282,6 +282,63 @@ h2 { font-family:"Archivo",system-ui,sans-serif; font-weight:700; font-size:19px
 .swatch.sp { background:transparent; border-style:dashed; border-color:var(--spare-line); }
 .swatch.ab { background:var(--absent); border-color:transparent; }
 
+/* ---------- link grid (manual 5.5) ---------- */
+.derived-note {
+  border-left:2px solid var(--warn); padding:2px 0 2px 14px;
+  display:flex; flex-direction:column; gap:4px;
+  color:var(--ink-mid); font-size:13.5px; max-width:78ch;
+}
+.derived-note b { color:var(--ink); font-size:13.5px; }
+
+.grids { display:grid; grid-template-columns:1fr; gap:14px; }
+@media (min-width:720px) { .grids { grid-template-columns:repeat(2,1fr); } }
+.vpu-card {
+  margin:0; background:var(--panel); border:1px solid var(--rule);
+  border-radius:4px; box-shadow:var(--shadow); padding:12px 12px 10px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.vpu-card.unfitted { box-shadow:none; opacity:.55; }
+.vpu-card figcaption {
+  display:flex; flex-wrap:wrap; gap:3px 10px; align-items:baseline;
+  border-top:1px solid var(--rule-soft); padding-top:8px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+}
+.vpu-card figcaption b { font-size:12px; letter-spacing:.07em; color:var(--ink); }
+.vpu-card figcaption span { font-size:10.5px; color:var(--ink-soft); letter-spacing:.03em; }
+
+svg.vpu { width:100%; height:auto; display:block; }
+svg.vpu .field { fill:var(--panel-sunk); stroke:var(--rule); stroke-width:1.5; }
+svg.vpu .lattice { stroke:var(--rule-soft); stroke-width:1; }
+svg.vpu .boundary { stroke:var(--ink-soft); stroke-width:1.5; stroke-dasharray:4 3; opacity:.7; pointer-events:none; }
+svg.vpu .in  { stroke:var(--accent); stroke-width:1.5; }
+svg.vpu .out { stroke:var(--ink-soft); stroke-width:1.5; }
+svg.vpu .ah-in  { fill:var(--accent); }
+svg.vpu .ah-out { fill:var(--ink-soft); }
+svg.vpu.unfitted .in, svg.vpu.unfitted .out { opacity:.35; }
+
+svg.vpu .blk rect { stroke-width:1.5; }
+svg.vpu .blk.c1 rect { fill:var(--s1-tint); stroke:var(--s1); }
+svg.vpu .blk.c2 rect { fill:var(--s2-tint); stroke:var(--s2); }
+svg.vpu .blk.c3 rect { fill:var(--s3-tint); stroke:var(--s3); }
+svg.vpu .blk.c4 rect { fill:var(--s4-tint); stroke:var(--s4); }
+svg.vpu .blk.c5 rect { fill:var(--s5-tint); stroke:var(--s5); }
+svg.vpu .blk.c6 rect { fill:var(--s6-tint); stroke:var(--s6); }
+/* a numbered layer reads as an outline, native as a filled block */
+svg.vpu .blk.layered rect { fill:none; stroke-dasharray:3 2; }
+
+svg.vpu .blk text {
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  text-anchor:middle; pointer-events:none;
+}
+svg.vpu .blk .b-scr { font-size:11px; font-weight:600; }
+svg.vpu .blk .b-scr.sm { font-size:9px; }
+svg.vpu .blk .b-ly { font-size:7.5px; letter-spacing:.06em; opacity:.85; }
+svg.vpu .blk.c1 text { fill:var(--s1); } svg.vpu .blk.c2 text { fill:var(--s2); }
+svg.vpu .blk.c3 text { fill:var(--s3); } svg.vpu .blk.c4 text { fill:var(--s4); }
+svg.vpu .blk.c5 text { fill:var(--s5); } svg.vpu .blk.c6 text { fill:var(--s6); }
+
+svg.vpu .hook { fill:none; stroke:var(--warn); stroke-width:1.5; }
+
 /* ---------- budget rows ---------- */
 .budget {
   display:flex; flex-direction:column; gap:1px;

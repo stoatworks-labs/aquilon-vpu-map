@@ -7,9 +7,12 @@ import {
   MIXER_IDS,
   PROCESSORS,
   MIXERS_PER_PROCESSOR,
+  LINKS_PER_VPU,
+  SCALING_ENGINE_BOUNDARY,
   parseMixerId,
   summarise,
   diff,
+  deriveLinkGrid,
 } from './vpu.js';
 
 const $ = (id) => document.getElementById(id);
@@ -28,6 +31,8 @@ const els = {
   stats: $('stats'),
   chassis: $('chassis'),
   budget: $('budget'),
+  grids: $('grids'),
+  derivedNote: $('derivedNote'),
   detail: $('detail'),
   diffSection: $('diffSection'),
   diff: $('diff'),
@@ -208,6 +213,165 @@ function renderChassis(mixers, colours, changedIds) {
   els.chassis.replaceChildren(ruler, ...rows, legend);
 }
 
+/* ---------------- link grid (manual §5.5) ---------------- */
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function svg(tag, props = {}, ...children) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v === undefined || v === null || v === false) continue;
+    node.setAttribute(k, String(v));
+  }
+  for (const c of children.flat()) {
+    if (c === null || c === undefined || c === false) continue;
+    node.append(c);
+  }
+  return node;
+}
+
+const CELL = 30;
+const PAD_L = 34; // room for the layer-link arrows
+const PAD_T = 22; // room for the output-link arrows
+const FIELD = CELL * LINKS_PER_VPU;
+
+function renderVpu(grid, colours) {
+  const W = PAD_L + FIELD + 14;
+  const H = PAD_T + FIELD + PAD_T;
+  const root = svg('svg', {
+    class: `vpu${grid.fitted ? '' : ' unfitted'}`,
+    viewBox: `0 0 ${W} ${H}`,
+    role: 'img',
+    'aria-label': `VPU ${grid.vpu}, ${grid.blocks.length} layer blocks`,
+  });
+
+  const x0 = PAD_L;
+  const y0 = PAD_T;
+
+  // chassis
+  root.append(
+    svg('rect', {
+      class: 'field', x: x0, y: y0, width: FIELD, height: FIELD, rx: 2,
+    }),
+  );
+
+  // link lattice
+  for (let i = 1; i < LINKS_PER_VPU; i++) {
+    root.append(
+      svg('line', { class: 'lattice', x1: x0 + i * CELL, y1: y0, x2: x0 + i * CELL, y2: y0 + FIELD }),
+      svg('line', { class: 'lattice', x1: x0, y1: y0 + i * CELL, x2: x0 + FIELD, y2: y0 + i * CELL }),
+    );
+  }
+
+  // layer links in (left), output links out (top and bottom)
+  for (let i = 0; i < LINKS_PER_VPU; i++) {
+    const cy = y0 + i * CELL + CELL / 2;
+    root.append(
+      svg('line', { class: 'in', x1: x0 - 26, y1: cy, x2: x0 - 4, y2: cy, 'marker-end': `url(#in-${grid.vpu})` }),
+    );
+    const cx = x0 + i * CELL + CELL / 2;
+    root.append(
+      svg('line', { class: 'out', x1: cx, y1: y0 - 16, x2: cx, y2: y0 - 3, 'marker-end': `url(#out-${grid.vpu})` }),
+      svg('line', { class: 'out', x1: cx, y1: y0 + FIELD + 3, x2: cx, y2: y0 + FIELD + 16, 'marker-end': `url(#out-${grid.vpu})` }),
+    );
+  }
+
+  // arrowheads
+  const marker = (id, cls) =>
+    svg('marker', { id, viewBox: '0 0 8 8', refX: 6, refY: 4, markerWidth: 5, markerHeight: 5, orient: 'auto-start-reverse' },
+      svg('path', { class: cls, d: 'M0,1 L7,4 L0,7 z' }));
+  root.append(svg('defs', {}, marker(`in-${grid.vpu}`, 'ah-in'), marker(`out-${grid.vpu}`, 'ah-out')));
+
+  // layer blocks
+  for (const b of grid.blocks) {
+    const colour = colours.get(b.screen) || 'c1';
+    const bx = x0 + b.col * CELL;
+    const by = y0 + b.row * CELL;
+    const bw = b.size * CELL;
+    const bh = b.size * CELL;
+    const isNative = b.layer === 'NATIVE';
+
+    const g = svg('g', { class: `blk ${colour}${isNative ? '' : ' layered'}` });
+    g.append(
+      svg('title', {}, document.createTextNode(
+        `${b.mixer}\n${b.screen} · ${layerLabel(b.layer)} · slice ${b.slice}` +
+        `\ncapability ${b.capability}` +
+        (b.wrapped ? '\nwrapped onto an additional layer link' : '') +
+        (b.crossesBoundary ? '\npast the scaling-engine boundary' : ''),
+      )),
+      svg('rect', { x: bx + 1.5, y: by + 1.5, width: bw - 3, height: bh - 3, rx: 2 }),
+    );
+
+    if (bw >= 46) {
+      g.append(
+        svg('text', { class: 'b-scr', x: bx + bw / 2, y: by + bh / 2 - 4 }, document.createTextNode(String(b.screen))),
+        svg('text', { class: 'b-ly', x: bx + bw / 2, y: by + bh / 2 + 8 },
+          document.createTextNode(isNative ? 'NAT' : `L${b.layer}`)),
+      );
+    } else {
+      g.append(svg('text', { class: 'b-scr sm', x: bx + bw / 2, y: by + bh / 2 + 3 },
+        document.createTextNode(String(b.screen))));
+    }
+
+    // the manual's wrap hook
+    if (b.wrapped && b.col === 0) {
+      g.append(svg('path', {
+        class: 'hook',
+        d: `M${bx - 9},${by - CELL + bh / 2} q0,${CELL / 2} 7,${CELL / 2}`,
+      }));
+    }
+    root.append(g);
+  }
+
+  // scaling-engine boundary — 4 output links (§5.5.4). Drawn last so it reads
+  // across the blocks it constrains rather than hiding behind them.
+  root.append(
+    svg('line', {
+      class: 'boundary',
+      x1: x0 + SCALING_ENGINE_BOUNDARY * CELL, y1: y0,
+      x2: x0 + SCALING_ENGINE_BOUNDARY * CELL, y2: y0 + FIELD,
+    }),
+  );
+
+  return root;
+}
+
+function renderGrids(mixers, colours) {
+  const grids = deriveLinkGrid(mixers);
+  els.grids.replaceChildren(
+    ...grids.map((g) =>
+      el(
+        'figure',
+        { class: `vpu-card${g.fitted ? '' : ' unfitted'}` },
+        renderVpu(g, colours),
+        el(
+          'figcaption',
+          {},
+          el('b', { text: `VPU ${g.vpu}` }),
+          el('span', {
+            text: g.fitted
+              ? `${g.blocks.length} block${g.blocks.length === 1 ? '' : 's'} · ${g.rowsUsed}/${LINKS_PER_VPU} layer links` +
+                (g.spare ? ` · ${g.spare} spare` : '')
+              : 'not fitted',
+          }),
+        ),
+      ),
+    ),
+  );
+
+  const placed = grids.reduce((n, g) => n + g.blocks.length, 0);
+  els.derivedNote.replaceChildren(
+    el('b', { text: 'Derived layout — position is not reported by the device.' }),
+    el('span', {
+      text:
+        `The device says what each of these ${placed} blocks serves (screen, layer, slice, capability) ` +
+        'but not which link it occupies. Blocks are placed by laying each screen-and-layer run left to right ' +
+        'in capacity-sized squares, wrapping onto another layer link when a run fills one. ' +
+        'Sizes, counts and grouping are real; exact row and column are not.',
+    }),
+  );
+}
+
 function renderBudget(sum, colours) {
   if (!sum.allocations.length) {
     els.budget.replaceChildren(
@@ -307,6 +471,7 @@ function render(payload) {
 
   renderStats(sum, { diffCount: changes.length });
   renderChassis(current, colours, changedIds);
+  renderGrids(current, colours);
   renderBudget(sum, colours);
   renderDiff(changes);
   renderDetail(current);

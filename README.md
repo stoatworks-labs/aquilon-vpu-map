@@ -18,6 +18,31 @@ a time. This puts the whole chassis on one screen.
 
 ![The chassis map, read from a real Aquilon C](docs/screenshot.png)
 
+## The link grid
+
+![Each VPU as an 8x8 field of links](docs/link-grid.png)
+
+The manual draws a VPU as an **8×8 field of links** — eight layer links in from the
+left, eight output links out through the top and bottom (User Manual v6.0 §5.5). A
+layer occupies a square block sized by its capacity: capacity 1 is 1×1 links,
+capacity 2 is 2×2, capacity 4 is 4×4. So one VPU holds 64 capacity-1 layers, 16
+capacity-2 ones, or 4 capacity-4 ones.
+
+A VPU spreads a layer over at most **4 output links**; a layer wider than that takes
+a second layer link and wraps onto it (§5.5.4), which the view marks with the
+manual's hook. A screen needing more than 8 outputs spills into another VPU (§5.5.5).
+
+> **Placement in this view is derived, not reported.** The device says what each
+> mixer serves — screen, layer, slice, capability — but not which row and column it
+> occupies. Blocks are laid out by an explicit rule: each screen-and-layer run runs
+> left to right in capacity-sized squares, wrapping onto another layer link when one
+> fills. Sizes, counts and grouping are real; exact row and column are not.
+>
+> `$vpuLayer` — 8 scalers per VPU, each declaring which of 8 output pipes it drives —
+> looks like the reported grid, but reads empty on the simulator and has never been
+> seen populated. [docs/HARDWARE-PROBE.md](docs/HARDWARE-PROBE.md) is the procedure
+> for settling it on real hardware.
+
 ## What a VPU mixer is
 
 A **VPU mixer** is the physical mixing and scaling resource the device allocates to a
@@ -113,6 +138,16 @@ DeviceObject/preconfig/resources/{current|new}/status/mapping
 
 AWJ cannot enumerate: every container read returns `{}`. See [AGENTS.md](AGENTS.md) for
 where the model came from and how to recover the rest of it.
+
+## Probing hardware
+
+```bash
+node scripts/probe-hardware.mjs <ip> --out probe-out
+```
+
+Read-only. Captures the device's whole `preconfig/resources` subtree, sweeps for
+paths this tool does not yet use, and reports whether the `$vpuLayer` link grid is
+populated. See [docs/HARDWARE-PROBE.md](docs/HARDWARE-PROBE.md).
 
 ## Tests
 
