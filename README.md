@@ -61,13 +61,27 @@ The device reports the map read-only, and keeps two copies of it: `current` (run
 and `new` (staged). This tool shows the running map and highlights anything the staged
 one would change.
 
-## Running it
+## Using it
 
 ```bash
 npm start
 ```
 
 Then open <http://localhost:8531> and enter your Aquilon's address.
+
+- **Screens are named the way you named them** — "S1 · Main LED", read from the
+  device. Those names stay in the live view; they are not in the recorded captures
+  or the profiler, both of which are public.
+- **Keep watching** re-reads on an interval. It stops itself if a read fails, and
+  leaves the last good reading on screen rather than blanking on a network blip.
+- **Save this reading** writes the whole thing to a file. **Compare with a saved
+  reading** then diffs the live device against it and lists what moved — take one
+  before the show, compare during it.
+- **Staged changes** shows what applying the device's own pending configuration
+  would do, including link re-allocations that change no property at all.
+
+[docs/ROADMAP.md](docs/ROADMAP.md) is what it cannot do yet, and which capture
+would unblock each one.
 
 ```bash
 PORT=9000 AQUILON_IP=192.168.1.50 npm start

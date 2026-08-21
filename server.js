@@ -12,7 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { AwjClient } from './lib/awj.js';
-import { readMapping, readIdentity } from './lib/read.js';
+import { readMapping, readIdentity, readScreenNames } from './lib/read.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(HERE, 'public');
@@ -65,6 +65,8 @@ async function handleRead(req, res, url) {
   try {
     await client.connect();
     const identity = await readIdentity(client);
+    // The operator's screen names, so the views read as "Main LED" not "S1".
+    const screens = await readScreenNames(client);
     const current = await readMapping(client, { which: 'current', device });
 
     // The staged mapping is the same size again; only read it if it exists.
@@ -81,6 +83,7 @@ async function handleRead(req, res, url) {
       source: { kind: 'device', host, port, device, ...identity },
       capturedAt: new Date().toISOString(),
       elapsedMs: Date.now() - started,
+      screens,
       current,
       new: next,
     });

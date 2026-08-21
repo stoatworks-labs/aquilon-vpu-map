@@ -43,9 +43,26 @@
         <option value="4">4 &mdash; Follower 3</option>
       </select>
     </div>
+    <div class="field narrow">
+      <label for="poll">Keep watching</label>
+      <select id="poll" name="poll">
+        <option value="0" selected>Off — read once</option>
+        <option value="10">Every 10 seconds</option>
+        <option value="30">Every 30 seconds</option>
+        <option value="120">Every 2 minutes</option>
+      </select>
+    </div>
     <button class="btn primary" type="submit" id="readBtn">Read device</button>
     <button class="btn" type="button" id="sampleBtn">Load recorded capture</button>
   </form>
+
+  <div class="tools" id="tools" hidden>
+    <button class="btn" type="button" id="saveBtn">Save this reading</button>
+    <label class="btn file" for="compareFile">Compare with a saved reading…</label>
+    <input id="compareFile" type="file" accept="application/json,.json" hidden>
+    <button class="btn" type="button" id="clearCompare" hidden>Stop comparing</button>
+    <span class="tools-note" id="toolsNote"></span>
+  </div>
 
   <p class="conn-note" id="connNote">
     Reads only &mdash; this tool never writes to the device. AWJ is TCP&nbsp;10606,
@@ -98,8 +115,8 @@
 
     <section id="diffSection" hidden>
       <div class="head">
-        <h2>Staged changes</h2>
-        <p>
+        <h2 id="diffTitle">Staged changes</h2>
+        <p id="diffLede">
           The device keeps a running allocation and a staged one. These mixers differ
           between the two &mdash; this is what applying the pending configuration would cost.
         </p>

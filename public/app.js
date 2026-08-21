@@ -36,7 +36,22 @@ const els = {
   detail: $('detail'),
   diffSection: $('diffSection'),
   diff: $('diff'),
+  diffTitle: $('diffTitle'),
+  diffLede: $('diffLede'),
+  poll: $('poll'),
+  tools: $('tools'),
+  saveBtn: $('saveBtn'),
+  compareFile: $('compareFile'),
+  clearCompare: $('clearCompare'),
+  toolsNote: $('toolsNote'),
 };
+
+/** Whatever is on screen, and anything we are comparing it against. */
+const state = { payload: null, baseline: null, baselineName: '', timer: null };
+
+/** The operator's own screen names, when a live read supplied them. */
+let SCREEN_NAMES = {};
+const screenLabel = (s) => SCREEN_NAMES[s] || '';
 
 const SAMPLE_URL = './data/aquilon-c-snapshot.json';
 const IP_KEY = 'aquilon-vpu-map.ip';
@@ -58,8 +73,8 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 
-function setStatus(state, text, source) {
-  els.dot.dataset.state = state;
+function setStatus(dotState, text, source) {
+  els.dot.dataset.state = dotState;
   els.status.textContent = text;
   if (source) {
     els.source.textContent = source;
@@ -95,6 +110,12 @@ function screenColourMap(allocations) {
 
 const layerLabel = (layer) => (layer === 'NATIVE' ? 'NATIVE' : `LAYER ${layer}`);
 
+/** "S1 · Main LED" where a name is known, otherwise just "S1". */
+const screenWithName = (s) => {
+  const n = screenLabel(s);
+  return n ? `${s} \u00b7 ${n}` : String(s);
+};
+
 /* ---------------- rendering ---------------- */
 
 function renderStats(sum, meta) {
@@ -116,11 +137,17 @@ function renderStats(sum, meta) {
       v: `${sum.screens}`,
       n: `${sum.allocations.length} layer${sum.allocations.length === 1 ? '' : 's'} allocated`,
     },
-    {
-      k: 'Staged changes',
-      v: `${meta.diffCount}`,
-      n: meta.diffCount === 0 ? 'Staged config matches running' : 'Mixers differ from running',
-    },
+    meta.comparing
+      ? {
+          k: 'Vs saved reading',
+          v: `${meta.diffCount}`,
+          n: meta.diffCount === 0 ? 'Identical to the saved reading' : 'Mixers differ from the saved reading',
+        }
+      : {
+          k: 'Staged changes',
+          v: `${meta.diffCount}`,
+          n: meta.diffCount === 0 ? 'Staged config matches running' : 'Mixers differ from running',
+        },
   ];
 
   els.stats.replaceChildren(
@@ -181,7 +208,7 @@ function renderChassis(mixers, colours, changedIds) {
         {
           class: `cell ${colour}${layered}${changed}`,
           title:
-            `${id}\n${rec.usedInScreen} · ${layerLabel(rec.usedInLayer)} · slice ${rec.slice}` +
+            `${id}\n${screenWithName(rec.usedInScreen)} · ${layerLabel(rec.usedInLayer)} · slice ${rec.slice}` +
             `\ncapability ${rec.capability}, channel ${rec.channel}` +
             (pipes ? `\n${pipes}` : ''),
         },
@@ -301,7 +328,7 @@ function renderVpu(grid, colours) {
     const g = svg('g', { class: `blk ${colour}${isNative ? '' : ' layered'}` });
     g.append(
       svg('title', {}, document.createTextNode(
-        `${b.mixer}\n${b.screen} · ${layerLabel(b.layer)} · slice ${b.slice}` +
+        `${b.mixer}\n${screenWithName(b.screen)} · ${layerLabel(b.layer)} · slice ${b.slice}` +
         `\ncapability ${b.capability}` +
         (b.cutnfill && b.cutnfill !== 'OFF' ? `\ncut & fill ${b.cutnfill}` : '') +
         `\noutput link${cols.length === 1 ? '' : 's'} ${cols.map((c) => c + 1).join(', ')}` +
@@ -423,7 +450,14 @@ function renderBudget(sum, colours) {
         'div',
         { class: `row ${colour}` },
         el('span', { class: 'name', text: String(a.screen) }),
-        el('span', { class: 'kind', text: a.layer === 'NATIVE' ? 'Native' : `Layer ${a.layer}` }),
+        el(
+          'span',
+          { class: 'kind' },
+          a.layer === 'NATIVE' ? 'Native' : `Layer ${a.layer}`,
+          screenLabel(a.screen)
+            ? el('em', { class: 'name-sub', text: ` ${screenLabel(a.screen)}` })
+            : null,
+        ),
         el(
           'span',
           { class: 'slices' },
@@ -440,9 +474,15 @@ function renderBudget(sum, colours) {
   );
 }
 
-function renderDiff(changes, mixers, colours) {
+function renderDiff(changes, mixers, colours, comparing) {
+  els.diffTitle.textContent = comparing ? 'Changed since the saved reading' : 'Staged changes';
+  els.diffLede.textContent = comparing
+    ? `These mixers differ from ${state.baselineName || 'the saved reading'} \u2014 what has moved since.`
+    : 'The device keeps a running allocation and a staged one. These mixers differ '
+      + 'between the two \u2014 this is what applying the pending configuration would cost.';
   if (!changes.length) {
     els.diffSection.hidden = true;
+    els.diff.replaceChildren(); // do not leave the previous comparison behind
     return;
   }
   els.diffSection.hidden = false;
@@ -464,7 +504,7 @@ function renderDiff(changes, mixers, colours) {
         el('span', {
           class: 'kind',
           text: rec.usedInScreen
-            ? `${rec.usedInScreen} ${rec.usedInLayer === 'NATIVE' ? 'native' : `layer ${rec.usedInLayer}`}`
+            ? `${screenWithName(rec.usedInScreen)} ${rec.usedInLayer === 'NATIVE' ? 'native' : `layer ${rec.usedInLayer}`}`
             : 'not in use',
         }),
         el(
@@ -494,7 +534,7 @@ function renderDetail(mixers) {
     const cells = [
       el('td', { class: 'm', text: id }),
       el('td', { text: r.isEnabled ? 'yes' : 'no' }),
-      el('td', { text: r.isEnabled ? String(r.usedInScreen) : '—' }),
+      el('td', { text: r.isEnabled ? screenWithName(r.usedInScreen) : '—' }),
       el('td', { text: r.isEnabled ? layerLabel(r.usedInLayer) : '—' }),
       el('td', { text: r.isEnabled ? String(r.slice) : '—' }),
       el('td', { text: String(r.channel ?? '—') }),
@@ -512,21 +552,30 @@ function renderDetail(mixers) {
 }
 
 function render(payload) {
+  state.payload = payload;
+  SCREEN_NAMES = payload.screens || {};
+
   const current = payload.current || {};
-  const staged = payload.new || null;
-  const changes = staged ? diff(current, staged) : [];
+
+  // Compare against a saved reading when one is loaded, otherwise against the
+  // device's own staged mapping. Same machinery either way.
+  const comparing = !!state.baseline;
+  const against = comparing ? state.baseline.current || {} : payload.new;
+  const changes = against ? diff(comparing ? against : current, comparing ? current : against) : [];
+
   const sum = summarise(current);
   const colours = screenColourMap(sum.allocations);
   const changedIds = new Set(changes.map((c) => c.mixer));
 
-  renderStats(sum, { diffCount: changes.length });
+  renderStats(sum, { diffCount: changes.length, comparing });
   renderChassis(current, colours, changedIds);
   renderGrids(current, colours);
   renderBudget(sum, colours);
-  renderDiff(changes, current, colours);
+  renderDiff(changes, current, colours, comparing);
   renderDetail(current);
 
   els.results.hidden = false;
+  els.tools.hidden = false;
 }
 
 /* ---------------- data ---------------- */
@@ -539,11 +588,13 @@ function describeSource(src, capturedAt) {
   return [name, where, when].filter(Boolean).join(' — ');
 }
 
-async function readDevice(ip, device) {
-  setStatus('busy', 'Reading…', `${ip} · device ${device}`);
-  els.readBtn.disabled = true;
-  els.sampleBtn.disabled = true;
-  clearBanner();
+async function readDevice(ip, device, { quiet = false } = {}) {
+  if (!quiet) {
+    setStatus('busy', 'Reading…', `${ip} · device ${device}`);
+    els.readBtn.disabled = true;
+    els.sampleBtn.disabled = true;
+    clearBanner();
+  }
 
   try {
     const res = await fetch(
@@ -562,16 +613,19 @@ async function readDevice(ip, device) {
       } else {
         setStatus('error', 'Read failed');
         showBanner('error', `Could not read ${ip}.`, body.error || 'Unknown error.');
+        stopPolling('a read failed');
       }
       return;
     }
 
     localStorage.setItem(IP_KEY, ip);
-    setStatus('live', 'Live', describeSource(body.source, body.capturedAt));
+    setStatus('live', pollSeconds() ? `Live \u00b7 every ${pollSeconds()}s` : 'Live',
+      describeSource(body.source, body.capturedAt));
     render(body);
   } catch (err) {
     setStatus('error', 'Read failed');
     showBanner('error', 'Could not reach the app server.', String(err.message || err));
+    stopPolling('the app server could not be reached');
   } finally {
     els.readBtn.disabled = false;
     els.sampleBtn.disabled = false;
@@ -579,6 +633,7 @@ async function readDevice(ip, device) {
 }
 
 async function loadSample() {
+  stopPolling();
   setStatus('busy', 'Loading capture…');
   clearBanner();
   try {
@@ -598,13 +653,88 @@ async function loadSample() {
   }
 }
 
+/* ---------------- keep watching, save, compare ---------------- */
+
+const pollSeconds = () => Number(els.poll.value) || 0;
+
+function stopPolling(why) {
+  if (!state.timer) return;
+  clearInterval(state.timer);
+  state.timer = null;
+  els.poll.value = '0';
+  if (why) els.toolsNote.textContent = `stopped watching \u2014 ${why}`;
+}
+
+function startPolling() {
+  stopPolling();
+  const secs = pollSeconds();
+  if (!secs) return;
+  // Only ever re-reads what is already on screen; never starts a read by itself.
+  state.timer = setInterval(() => {
+    const ip = els.ip.value.trim();
+    if (ip) readDevice(ip, els.device.value, { quiet: true });
+  }, secs * 1000);
+}
+
+function saveReading() {
+  if (!state.payload) return;
+  const src = state.payload.source || {};
+  const stamp = new Date().toISOString().slice(0, 19).split(':').join('-');
+  const name = `vpu-reading-${(src.dev || 'device').toLowerCase()}-${stamp}.json`;
+  const blob = new Blob([JSON.stringify(state.payload, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  els.toolsNote.textContent = `saved ${name}`;
+}
+
+async function loadBaseline(file) {
+  try {
+    const text = await file.text();
+    const body = JSON.parse(text);
+    if (!body || !body.current) throw new Error('not a VPU reading — no "current" mapping');
+    state.baseline = body;
+    state.baselineName = file.name;
+    els.clearCompare.hidden = false;
+    els.toolsNote.textContent = `comparing against ${file.name}`;
+    if (state.payload) render(state.payload);
+    else showBanner('info', 'Saved reading loaded.', 'Read a device to compare it against.');
+  } catch (err) {
+    showBanner('error', 'Could not read that file.', String(err.message || err));
+  }
+}
+
+function clearBaseline() {
+  state.baseline = null;
+  state.baselineName = '';
+  els.clearCompare.hidden = true;
+  els.compareFile.value = '';
+  els.toolsNote.textContent = '';
+  if (state.payload) render(state.payload);
+}
+
+els.poll.addEventListener('change', () => {
+  els.toolsNote.textContent = '';
+  if (!pollSeconds()) { stopPolling(); return; }
+  if (state.payload && state.payload.mode === 'live') startPolling();
+});
+els.saveBtn.addEventListener('click', saveReading);
+els.compareFile.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (f) loadBaseline(f);
+});
+els.clearCompare.addEventListener('click', clearBaseline);
+
 /* ---------------- boot ---------------- */
 
-els.form.addEventListener('submit', (e) => {
+els.form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const ip = els.ip.value.trim();
   if (!ip) return;
-  readDevice(ip, els.device.value);
+  await readDevice(ip, els.device.value);
+  if (state.payload && state.payload.mode === 'live') startPolling();
 });
 
 els.sampleBtn.addEventListener('click', loadSample);

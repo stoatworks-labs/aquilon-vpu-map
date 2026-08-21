@@ -178,6 +178,15 @@ h1 {
 
 .conn-note { margin:0; color:var(--ink-soft); font-size:13px; max-width:78ch; }
 
+.tools { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.tools .btn { flex:0 0 auto; }
+.btn.file { display:inline-flex; align-items:center; }
+.tools-note {
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:11px; letter-spacing:.06em; color:var(--ink-soft);
+}
+.name-sub { color:var(--ink-soft); font-weight:400; }
+
 .banner {
   border-left:3px solid var(--bad); background:var(--panel);
   border-radius:0 3px 3px 0; padding:13px 16px;

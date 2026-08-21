@@ -45,6 +45,14 @@ device reports that allocation read-only over AWJ. This app reads it and draws i
   28 mixers while every property stays identical. Comparing properties alone reported
   "staged config matches running", which was wrong and looked right. Caught by running
   the profiler against hardware, not by any test.
+- **Screen names are show data.** `readScreenNames()` reads the operator's own
+  labels (`$screen/@items/S<n>/control/@props/label` — note `$screen`, not
+  `$screenAuxGroup`, whose `control` has no `label`). They make every view readable
+  and belong in the live view only: keep them out of `data/`, out of
+  `scripts/profile-vpu.mjs`, and out of screenshots destined for the public README.
+- **Polling must fail closed.** `stopPolling()` runs on any failed read, so a device
+  that goes away is not hammered every interval. It also leaves the last good reading
+  rendered — losing the view on a blip is worse than stale data clearly labelled.
 - **`[hidden]` needs restating in author CSS.** `styles.css` sets `display:flex` on
   `section` and `main`; author rules beat the UA stylesheet's `[hidden]{display:none}`
   regardless of specificity, so without the explicit `[hidden]{display:none!important}`
