@@ -28,7 +28,10 @@ jobs:
           - platform: macos-latest
             target: aarch64-apple-darwin
             name: macOS (Apple silicon)
-          - platform: macos-13
+          # Intel macOS is CROSS-COMPILED on the Apple Silicon runner. GitHub's
+          # macos-13 hosted runners are capacity-dead — jobs queue for hours and
+          # effectively never schedule — so never put an x86_64 mac job there.
+          - platform: macos-14
             target: x86_64-apple-darwin
             name: macOS (Intel)
           - platform: ubuntu-22.04
