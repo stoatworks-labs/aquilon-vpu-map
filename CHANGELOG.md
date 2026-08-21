@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — 2026-08-21
+
+**The desktop app could not see the network once it was double-clicked.** Since
+macOS 15 an app must declare why it uses the local network, and on 26 the
+enforcement is thorough: without `NSLocalNetworkUsageDescription` a GUI-launched
+app is denied LAN traffic silently, so `read_vpu`'s TCP connect to the processor
+failed and the map stayed empty. The key was already in `Info.ios.plist`, which
+does not feed the macOS bundle; there is now a macOS `Info.plist` beside it. It
+was invisible in development because a process started from a terminal inherits
+the terminal's own permission.
+
 
 **The link grid is the manual's grid again.** It was drawing rows by packing — a run
 took one row per slice, placed at the first row where its output links were free, so

@@ -1,6 +1,6 @@
 {
   "name": "aquilon-vpu-map",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "See how an Analog Way LivePremier allocates its VPU mixers across screens, layers and slices.",
   "type": "module",
   "license": "MIT",
