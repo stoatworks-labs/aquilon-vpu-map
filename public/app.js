@@ -13,6 +13,7 @@ import {
   summarise,
   diff,
   buildLinkGrid,
+  optimizedVpus,
 } from './vpu.js';
 
 const $ = (id) => document.getElementById(id);
@@ -33,6 +34,7 @@ const els = {
   budget: $('budget'),
   grids: $('grids'),
   derivedNote: $('derivedNote'),
+  screenStatus: $('screenStatus'),
   detail: $('detail'),
   diffSection: $('diffSection'),
   diff: $('diff'),
@@ -267,7 +269,7 @@ const PAD_L = 34; // room for the layer-link arrows
 const PAD_T = 22; // room for the output-link arrows
 const FIELD = CELL * LINKS_PER_VPU;
 
-function renderVpu(grid, colours) {
+function renderVpu(grid, colours, optimized) {
   const W = PAD_L + FIELD + 14;
   const H = PAD_T + FIELD + PAD_T;
   const root = svg('svg', {
@@ -374,27 +376,33 @@ function renderVpu(grid, colours) {
     root.append(g);
   }
 
-  // scaling-engine boundary — 4 output links (§5.5.4). Drawn last so it reads
+  // Scaling-engine boundary — 4 output links (§5.5.4). Drawn last so it reads
   // across the blocks it constrains rather than hiding behind them.
-  root.append(
-    svg('line', {
-      class: 'boundary',
-      x1: x0 + SCALING_ENGINE_BOUNDARY * CELL, y1: y0,
-      x2: x0 + SCALING_ENGINE_BOUNDARY * CELL, y2: y0 + FIELD,
-    }),
-  );
+  //
+  // Optimized mode REMOVES this boundary for the whole VPU (§5.5.6), so drawing
+  // it there would show a constraint the device is not applying.
+  if (!optimized) {
+    root.append(
+      svg('line', {
+        class: 'boundary',
+        x1: x0 + SCALING_ENGINE_BOUNDARY * CELL, y1: y0,
+        x2: x0 + SCALING_ENGINE_BOUNDARY * CELL, y2: y0 + FIELD,
+      }),
+    );
+  }
 
   return root;
 }
 
-function renderGrids(mixers, colours) {
+function renderGrids(mixers, colours, screenStatus) {
   const grids = buildLinkGrid(mixers);
+  const optimised = optimizedVpus(mixers, screenStatus);
   els.grids.replaceChildren(
     ...grids.map((g) =>
       el(
         'figure',
         { class: `vpu-card${g.fitted ? '' : ' unfitted'}` },
-        renderVpu(g, colours),
+        renderVpu(g, colours, optimised.has(g.vpu)),
         el(
           'figcaption',
           {},
@@ -405,6 +413,13 @@ function renderGrids(mixers, colours) {
                 (g.spare ? ` · ${g.spare} spare` : '')
               : 'not fitted',
           }),
+          optimised.has(g.vpu)
+            ? el('span', {
+                class: 'badge',
+                title: 'Optimized mode: the 4-link scaling-engine boundary does not apply to this VPU (manual §5.5.6)',
+                text: 'optimized',
+              })
+            : null,
         ),
       ),
     ),
@@ -435,7 +450,7 @@ function renderGrids(mixers, colours) {
   );
 }
 
-function renderBudget(sum, colours) {
+function renderBudget(sum, colours, screenStatus, stagedStatus) {
   if (!sum.allocations.length) {
     els.budget.replaceChildren(
       el('div', { class: 'row' }, el('span', { class: 'kind', text: 'No mixers enabled' })),
@@ -450,14 +465,9 @@ function renderBudget(sum, colours) {
         'div',
         { class: `row ${colour}` },
         el('span', { class: 'name', text: String(a.screen) }),
-        el(
-          'span',
-          { class: 'kind' },
-          a.layer === 'NATIVE' ? 'Native' : `Layer ${a.layer}`,
-          screenLabel(a.screen)
-            ? el('em', { class: 'name-sub', text: ` ${screenLabel(a.screen)}` })
-            : null,
-        ),
+        // The screen-status strip above already names every screen; repeating it
+        // here only made these rows wrap.
+        el('span', { class: 'kind', text: a.layer === 'NATIVE' ? 'Native' : `Layer ${a.layer}` }),
         el(
           'span',
           { class: 'slices' },
@@ -472,6 +482,56 @@ function renderBudget(sum, colours) {
       );
     }),
   );
+}
+
+/**
+ * What the device itself says each screen is spending, and what is left.
+ * These are reported figures, not derived from the mixer table.
+ */
+function renderScreenStatus(screenStatus, stagedStatus, colours) {
+  const entries = Object.entries(screenStatus || {});
+  if (!entries.length) {
+    els.screenStatus.hidden = true;
+    return { exceeding: [] };
+  }
+  els.screenStatus.hidden = false;
+
+  const exceeding = [];
+  els.screenStatus.replaceChildren(
+    ...entries.map(([id, st]) => {
+      const staged = (stagedStatus || {})[id] || {};
+      const over =
+        (staged.exceedingOutputCapabilities || 0) + (staged.exceedingLayerCapabilities || 0);
+      if (over > 0) exceeding.push(id);
+      const remaining = staged.remainingOutputCapabilities;
+
+      return el(
+        'div',
+        { class: `sstat ${colours.get(id) || ''}${over ? ' over' : ''}` },
+        el('span', { class: 'sid', text: screenWithName(id) }),
+        el('span', { class: 'sfig' },
+          el('b', { text: String(st.usedOutputCapabilities ?? '—') }),
+          ' output links',
+        ),
+        el('span', { class: 'sfig' },
+          el('b', { text: String(st.layerCount ?? '—') }),
+          ` layer${st.layerCount === 1 ? '' : 's'} over `,
+          el('b', { text: String(st.outputCount ?? '—') }),
+          ` output${st.outputCount === 1 ? '' : 's'}`,
+        ),
+        el('span', {
+          class: 'snote',
+          text: over
+            ? `over capacity by ${over}`
+            : remaining !== undefined
+              ? `${remaining} output link${remaining === 1 ? '' : 's'} spare`
+              : '',
+        }),
+        st.isOptimized ? el('span', { class: 'badge', text: 'optimized' }) : null,
+      );
+    }),
+  );
+  return { exceeding };
 }
 
 function renderDiff(changes, mixers, colours, comparing) {
@@ -569,8 +629,19 @@ function render(payload) {
 
   renderStats(sum, { diffCount: changes.length, comparing });
   renderChassis(current, colours, changedIds);
-  renderGrids(current, colours);
+  renderGrids(current, colours, (payload.screenStatus || {}).current);
   renderBudget(sum, colours);
+  const status = (payload.screenStatus || {}).current;
+  const staged = (payload.screenStatus || {}).new;
+  const { exceeding } = renderScreenStatus(status, staged, colours);
+  if (exceeding.length) {
+    showBanner(
+      'warn',
+      `${exceeding.length} screen${exceeding.length === 1 ? '' : 's'} exceed available capacity.`,
+      `${exceeding.join(', ')} — the device reports the staged configuration as over budget. ` +
+        'It will not fit as configured.',
+    );
+  }
   renderDiff(changes, current, colours, comparing);
   renderDetail(current);
 

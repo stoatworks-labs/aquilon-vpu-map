@@ -17,7 +17,12 @@ Enough to use.
   before-the-show / during-the-show workflow.
 - **Staged changes** shows what applying the device's pending configuration
   would do, including link re-allocations that change no property at all.
-- Works with no device in front of you, from the recorded captures.
+- **Answers "will it fit"** from the device's own figures, not by inference:
+  output links spent, layers over outputs, links spare, and a warning if a
+  screen is over budget.
+- **Knows when the scaling-engine boundary does not apply**, so the grid stops
+  drawing a constraint the device is not enforcing.
+- Works with no device in front of you, from three recorded captures.
 
 ## What it cannot do, and why
 
@@ -28,42 +33,61 @@ Enough to use.
 | No Link support in anger | Devices 2–4 answer every path with `isAvailable:false` on a standalone box; never seen populated | The same Link profile |
 | `DUAL` and `8K` capacities untested | Only `4K` and `5K` have ever been seen | A chassis using them |
 | Combined VPUs (§5.5.5) not handled | A screen over more than 8 outputs spills into another VPU; never observed | A configuration with a 9+ output screen |
-| Optimized mode (§5.5.6) not detected | It removes the 4-link scaling-engine boundary, so the boundary line would be **wrong** for that VPU | Finding a property that reports it, then hiding the line |
+| ~~Optimized mode not detected~~ | **Done.** `isOptimized` is reported per screen; the boundary is now suppressed on any VPU hosting one | — |
 | Cut & Fill effect on allocation unknown | `cutnfillCapa` is a *capability* and has read `OFF`/`4K`; what happens when the effect is actually enabled is unseen | A layer with Cut & Fill on |
-| No aux screens | Auxiliaries have labels (`$auxiliary/@items/A1/control/@props/label` reads "DSM") but their VPU cost has not been looked at | An afternoon, no new hardware needed |
+| ~~No aux screens~~ | **Not a gap.** Auxiliaries do not appear in the VPU map at all: the `SCREEN` enum behind `usedInScreen` is S1–S24 with no `A*` entries, and there is no aux module anywhere under `preconfig/resources`. They have labels, but no mixer ever reports serving one | — |
 
-## The order I would do them in
+## Done since this was written
 
-**1. Aux screens.** No new capture needed — the paths are there, it is only
-work. Auxiliaries consume resource too, and the tool currently pretends they do
-not exist.
+**Aux screens — turned out not to be a gap.** Worth stating because it looked
+like one: auxiliaries simply are not part of the VPU mixer map. The enum behind
+`usedInScreen` has no aux entries and `preconfig/resources` has no aux module,
+so there is nothing to show. They do have labels, which is what made it look
+like an omission.
 
-**2. Optimized mode.** The one limitation that makes the view actively *wrong*
-rather than merely incomplete. Worth finding the property even before a
-configuration that uses it, so the boundary line can be suppressed.
+**Optimized mode — done, and it was making the view wrong.** `isOptimized` is
+reported per screen under `resources/{current|new}/$screen/@items/S<n>/status`.
+It is a property of the whole VPU (§5.5.6), so `optimizedVpus()` maps screen →
+mixers → processor, and the scaling-engine boundary is no longer drawn there.
+On the captured chassis S1 spends 6 output capabilities and reports true, so
+VPU 1 correctly loses its boundary line.
 
-**3. A Link capture.** Unlocks `channel`, devices 2–4, and combined VPUs in one
-go — the biggest single step, and the only one that needs hardware we do not
-have.
+The same status node gave more than was being looked for: `outputCount`,
+`usedOutputCapabilities`, `layerCount`, and — on the `new` side —
+`remainingOutputCapabilities`, `exceedingOutputCapabilities` and
+`exceedingLayerCapabilities`. That is **"will it fit" answered by the device**
+rather than inferred, and it now drives the per-screen strip and an over-budget
+warning.
 
-**4. Everything else** as configurations turn up. `scripts/profile-vpu.mjs`
+## What is left
+
+**1. A Link capture.** Unlocks `channel`, devices 2–4, and combined VPUs in one
+go — the biggest single step, and the only one needing hardware we do not have.
+
+**2. Everything else** as configurations turn up. `scripts/profile-vpu.mjs`
 exists so other operators can contribute those without needing this repo or any
 knowledge of it.
 
 ## How to extend it safely
 
 Every configuration seen so far has broken an assumption the previous one made
-look settled:
+look settled — three for three:
 
 - one capture said a slice identifies one mixer — the second disproved it
 - one said every mixer is `4K` — the second reported `5K`, which `capacityToLinks`
   had no entry for at all
 - one said the staged mapping matched the running one — it differed only in
   links, which `diff()` was not comparing
+- two said the 4-link boundary always applies — the third reported
+  `isOptimized`, under which it does not
 
 So: **add a capture to `data/` rather than editing an existing one**, and make
 the tests assert against all of them. Two disagreeing captures are worth far
-more than one tidy one. If a third arrives, keep all three.
+more than one tidy one. There are three now; keep them all.
+
+**Never commit screen names.** They are the operator's own labels and this repo
+is public. A capture refreshed from a live read would carry them in silently, so
+there is a test that fails if any capture grows a `screens` field.
 
 `docs/HARDWARE-PROBE.md` is the procedure for a device you have; the profiler is
 for devices you do not.

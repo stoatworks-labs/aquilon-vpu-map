@@ -79,6 +79,11 @@ Then open <http://localhost:8531> and enter your Aquilon's address.
   before the show, compare during it.
 - **Staged changes** shows what applying the device's own pending configuration
   would do, including link re-allocations that change no property at all.
+- **Will it fit?** — answered from the device's own figures rather than inferred:
+  output links spent, layers over outputs, links spare, and a warning if a screen
+  is over budget. Screens in **Optimized mode** are marked, and the grid stops
+  drawing the scaling-engine boundary on their VPU, because it does not apply
+  there (§5.5.6).
 
 [docs/ROADMAP.md](docs/ROADMAP.md) is what it cannot do yet, and which capture
 would unblock each one.
@@ -116,19 +121,23 @@ If you want to be sure, `lib/awj.js` has no code path that emits `replace`.
 
 ## The recorded captures
 
-Two real reads from the same Aquilon C, deliberately different:
+Three real reads from the same Aquilon C, deliberately different:
 
 - `data/aquilon-c-snapshot.json` — four screens, one layer each, every mixer `4K`,
   with one eight-slice background. **Load recorded capture** shows this one.
 - `data/aquilon-c-6output-5k.json` — the same chassis reconfigured: S1 a **six-output**
   screen with native plus two layers, and S2 a **5K** layer.
+- `data/aquilon-c-optimized.json` — S1 with three layers over three outputs,
+  reporting `isOptimized`, plus the per-screen resource status.
 
 The tests run against both, because the first alone supports assumptions the second
 disproves — most importantly that a slice identifies one mixer. It does not: a layer
 spread over more than four output links is carried by a second mixer on different
 links, so a six-output screen reads as slices `[0,0,1,1]`.
 
-The host each came from is redacted; nothing else is edited.
+The host each came from is redacted, and screen names are stripped — those are
+show data, and a test fails if a capture ever grows them back. Nothing else is
+edited.
 
 ## Supported devices
 

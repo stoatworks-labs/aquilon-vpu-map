@@ -373,6 +373,36 @@ export function deriveLinkGrid(mixers) {
 }
 
 /**
+ * Which VPUs host a screen in Optimized mode.
+ *
+ * §5.5.6: Optimized mode is enabled for the WHOLE VPU when one screen on it uses
+ * at least 5 output links and at least one layer of capacity 2, and it removes
+ * the 4-output scaling-engine boundary. So the boundary belongs to the VPU, not
+ * to the screen that triggered it, and a grid that draws it on an optimized VPU
+ * is showing a constraint the device is not applying.
+ *
+ * `isOptimized` is reported per screen, so map screen -> its mixers -> their
+ * processors. On the captured Aquilon C, S1 spends 6 output capabilities and
+ * duly reports true, which makes VPU 1 optimized.
+ */
+export function optimizedVpus(mixers, screenStatus) {
+  const optimised = new Set(
+    Object.entries(screenStatus || {})
+      .filter(([, st]) => st && st.isOptimized)
+      .map(([id]) => id),
+  );
+  const vpus = new Set();
+  if (!optimised.size) return vpus;
+  for (const [id, rec] of Object.entries(mixers || {})) {
+    if (!rec || !rec.isEnabled) continue;
+    if (!optimised.has(String(rec.usedInScreen))) continue;
+    const parsed = parseMixerId(id);
+    if (parsed) vpus.add(parsed.processor);
+  }
+  return vpus;
+}
+
+/**
  * Which mixers differ between the running mapping and the staged one.
  *
  * The output links matter as much as the properties — a staged configuration

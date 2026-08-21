@@ -354,6 +354,30 @@ svg.vpu .blk.c5 text { fill:var(--s5); } svg.vpu .blk.c6 text { fill:var(--s6); 
 
 svg.vpu .hook { fill:none; stroke:var(--warn); stroke-width:1.5; }
 
+.sstats { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1px;
+  background:var(--rule-soft); border:1px solid var(--rule-soft); border-radius:3px; overflow:hidden; }
+.sstat { background:var(--panel); padding:13px 16px; display:flex; flex-direction:column; gap:3px; }
+.sstat.over { background:color-mix(in srgb, var(--bad) 8%, var(--panel)); }
+.sstat .sid {
+  font-family:"Archivo",system-ui,sans-serif; font-weight:700; font-size:15px; letter-spacing:-.01em;
+}
+.sstat.c1 .sid { color:var(--s1); } .sstat.c2 .sid { color:var(--s2); }
+.sstat.c3 .sid { color:var(--s3); } .sstat.c4 .sid { color:var(--s4); }
+.sstat.c5 .sid { color:var(--s5); } .sstat.c6 .sid { color:var(--s6); }
+.sstat .sfig { font-size:13px; color:var(--ink-mid); font-variant-numeric:tabular-nums; }
+.sstat .sfig b { color:var(--ink); font-weight:600; }
+.sstat .snote {
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px;
+  letter-spacing:.07em; text-transform:uppercase; color:var(--ink-soft);
+}
+.sstat.over .snote { color:var(--bad); }
+.badge {
+  align-self:flex-start; font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:9.5px; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--accent); border:1px solid var(--accent); border-radius:2px;
+  padding:1px 5px; margin-top:2px;
+}
+
 /* ---------- budget rows ---------- */
 .budget {
   display:flex; flex-direction:column; gap:1px;

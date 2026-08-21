@@ -11,6 +11,7 @@ import {
   buildLinkGrid,
   deriveLinkGrid,
   reportedColumns,
+  optimizedVpus,
   capacityToLinks,
   LINKS_PER_VPU,
   SCALING_ENGINE_BOUNDARY,
@@ -257,4 +258,51 @@ test('a mixed-capability chassis keeps each mixer’s own capability', () => {
   const p1 = buildLinkGrid(sixOut.current).find((g) => g.vpu === 1);
   const caps = new Set(p1.blocks.map((b) => b.capability));
   assert.deepEqual([...caps].sort(), ['4K', '5K'], 'both appear, per mixer');
+});
+
+/* ---------- Optimized mode (hardware, 2026-08-21) ---------- */
+
+const optimized = JSON.parse(
+  fs.readFileSync(path.join(HERE, '..', 'data', 'aquilon-c-optimized.json'), 'utf8'),
+);
+
+test('a screen in Optimized mode makes its whole VPU optimized', () => {
+  const st = optimized.screenStatus.current;
+  assert.equal(st.S1.isOptimized, true, 'S1 reports it');
+  assert.equal(st.S2.isOptimized, false);
+
+  // 5.5.6: at least 5 output links and a capacity-2 layer. S1 spends 6.
+  assert.ok(st.S1.usedOutputCapabilities >= 5, 'S1 spends 6 output capabilities');
+
+  // It is a property of the VPU, not the screen: S1's mixers are on PROC 1.
+  const vpus = optimizedVpus(optimized.current, st);
+  assert.deepEqual([...vpus], [1]);
+});
+
+test('the boundary applies to every VPU when nothing is optimized', () => {
+  // The other two captures have no optimized screen at all.
+  assert.deepEqual([...optimizedVpus(snapshot.current, {})], []);
+  assert.deepEqual([...optimizedVpus(sixOut.current, undefined)], [], 'tolerates no status');
+});
+
+test('the device reports headroom and overflow directly', () => {
+  const staged = optimized.screenStatus.new;
+  assert.equal(staged.S1.remainingOutputCapabilities, 2, 'two output links spare');
+  assert.equal(staged.S1.exceedingOutputCapabilities, 0);
+  assert.equal(staged.S1.exceedingLayerCapabilities, 0);
+  // Nothing on this chassis is over budget.
+  for (const [id, st] of Object.entries(staged)) {
+    assert.equal(
+      (st.exceedingOutputCapabilities || 0) + (st.exceedingLayerCapabilities || 0), 0, id,
+    );
+  }
+});
+
+test('screen names are never committed to the captures', () => {
+  // They are show data — the live view only. Guard it, because a capture
+  // refreshed from a live read would otherwise carry them in silently.
+  for (const snap of [snapshot, sixOut, optimized]) {
+    assert.equal(snap.screens, undefined, `${snap.note?.slice(0, 24)}… has no screen names`);
+    assert.equal(snap.source.host, 'redacted');
+  }
 });
