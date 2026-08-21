@@ -28,7 +28,7 @@ Enough to use.
 
 | Limitation | Why | What would fix it |
 | --- | --- | --- |
-| Row positions in the link grid are packed, not reported | The device names the output links a mixer drives, but nothing names the layer link | A firmware that populates `$vpuLayer`, or any property that indexes the row |
+| Which layer link a layer sits on is ordered, not reported | Nothing names the layer link. How many a layer spends is real — its capacity, plus a wrap past four output links — and no two layers share one, so only the order down the field is ours; it follows the device's mixer allocation order | A firmware that populates `$vpuLayer`, or any property that indexes the row |
 | `channel` is assumed to index the Link device | Reads 0 on every mixer of a standalone chassis | One profile from a Link setup |
 | No Link support in anger | Devices 2–4 answer every path with `isAvailable:false` on a standalone box; never seen populated | The same Link profile |
 | `DUAL` and `8K` capacities untested | Only `4K` and `5K` have ever been seen | A chassis using them |

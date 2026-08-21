@@ -1,5 +1,59 @@
 # Changelog
 
+## Unreleased
+
+**The link grid is the manual's grid again.** It was drawing rows by packing — a run
+took one row per slice, placed at the first row where its output links were free, so
+runs on disjoint links shared rows. That put S1, S2 and S3 all on layer link 1 of the
+captured VPU 1: three layers on one link, which the hardware cannot do. Checked against
+the figures in Aquilon User Manual v6.2 §5.5, two things were wrong — the rows, and the
+columns underneath them.
+
+- **A row is one layer-capacity link and carries one layer.** Every layer now gets rows
+  of its own, as many as its capacity (dual link 1, 4K60 2, 5K60 4), in the device's own
+  mixer order. Slices no longer add rows: the mixers of one slice-run are the same layer
+  on the same links, so they share a bar and the count sits in its corner.
+- **Columns belong to screens.** `usedOnOutPipe<k>: '<n>'` is a pair whose halves
+  disagree: the key is the interleaved VPU pipe, the value is which of the *screen's*
+  output links it carries. The value is the column. Each screen now owns a contiguous
+  run of links, as wide as its output count, and its layers all start at the same one —
+  §5.5.4's two four-output screens filling a VPU as links 1–4 and 5–8. A bar is
+  continuous, and the screen bar over the field says which links are whose.
+- **A layer past four output links wraps** onto another layer link with the manual's
+  hook (§5.5.4), because a link cannot cross the centre line. **Optimized mode lifts
+  that for capacity-2 layers and only those** (§5.5.6), so the grid takes the optimized
+  set as an argument and draws their bars unbroken; the boundary is now drawn on every
+  VPU, quieter on an optimized one.
+- **Native backgrounds are out of the eight.** A screen's native is reported like a
+  layer and holds mixers, but it spends output capacity, not layer capacity. It is drawn
+  dimmed in a band below the field and left out of `rowsUsed`.
+
+The six-output capture now reads as §5.5.4's own figure: S1's two layers each cover
+links 1–4 and wrap onto 5–6, S2 sits on 7–8, and VPU 1 is exactly 8/8 layer links and
+8/8 output links.
+
+**Working without a device.** Hardware access ended, so the recorded captures are
+now the only ground truth and the tool treats them that way.
+
+- The app offers **every** capture, not just the first — a picker fed by
+  `data/captures.json`. The other two were previously reachable only from tests.
+- New `scripts/capture-config.mjs`. `--report` needs no device and audits the
+  captures: what each proves, and which questions none of them answer, each with
+  the configuration that would close it. Given an address it records a new
+  capture, redacted, and lists it in the picker. Reads only.
+- New [docs/CAPTURE-GUIDE.md](docs/CAPTURE-GUIDE.md), written for whoever next has
+  an Aquilon and knows nothing about this tool.
+- The capture path is tested end to end against the scripted stand-in device, so
+  it stays honest with no hardware to try it on: the redaction, the picker entry,
+  and the report running every gap check over every capture.
+
+`buildLinkGrid(mixers, optimizedVpus)` blocks now carry `mixers`, `slices`, `height`,
+`outputs`, `section`, `background` and `wrapped`, and each grid carries `screens`,
+`columnsUsed` and `backgroundRows`; `mixer`, `slice` and `size` are kept as first-of
+aliases. New `reportedOutputs()` reads the values; `reportedColumns()` still reads the
+keys, which are now only the wiring. The vendored copy in webrcs-unleashed needs
+`npm run sync:vpu-model` there, and its renderer wants the same treatment.
+
 ## 1.1.0 — 2026-08-21
 
 **A desktop app.** Double-click, no Node, no Docker, no checkout — which is what

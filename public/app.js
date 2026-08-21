@@ -24,6 +24,7 @@ const els = {
   device: $('device'),
   readBtn: $('readBtn'),
   sampleBtn: $('sampleBtn'),
+  sample: $('sample'),
   dot: $('statusDot'),
   status: $('statusText'),
   source: $('sourceText'),
@@ -55,6 +56,10 @@ const state = { payload: null, baseline: null, baselineName: '', timer: null };
 let SCREEN_NAMES = {};
 const screenLabel = (s) => SCREEN_NAMES[s] || '';
 
+// The recorded captures, listed in data/captures.json. They are the only way to
+// exercise the tool without a device in front of you — which is now the normal
+// case — so every committed capture is offered, not just the first.
+const CAPTURE_INDEX = './data/captures.json';
 const SAMPLE_URL = './data/aquilon-c-snapshot.json';
 const IP_KEY = 'aquilon-vpu-map.ip';
 
@@ -267,11 +272,21 @@ function svg(tag, props = {}, ...children) {
 const CELL = 30;
 const PAD_L = 34; // room for the layer-link arrows
 const PAD_T = 22; // room for the output-link arrows
+const BAND_GAP = 12; // between the layer field and the background band
+const HEAD = 15; // the screen bar over the output links, as the manual draws it
 const FIELD = CELL * LINKS_PER_VPU;
 
 function renderVpu(grid, colours, optimized) {
+  // Native backgrounds spend output capacity but not layer capacity, so they are
+  // drawn in a band under the eight layer links rather than inside them.
+  const bandRows = grid.backgroundRows || 0;
+  const screens = grid.screens || [];
+  const head = screens.length ? HEAD + 4 : 0;
+  const bandTop = head + PAD_T + FIELD + (bandRows ? BAND_GAP : 0);
+  const bandH = bandRows * CELL;
+
   const W = PAD_L + FIELD + 14;
-  const H = PAD_T + FIELD + PAD_T;
+  const H = bandTop + bandH + PAD_T;
   const root = svg('svg', {
     class: `vpu${grid.fitted ? '' : ' unfitted'}`,
     viewBox: `0 0 ${W} ${H}`,
@@ -280,7 +295,27 @@ function renderVpu(grid, colours, optimized) {
   });
 
   const x0 = PAD_L;
-  const y0 = PAD_T;
+  const y0 = head + PAD_T;
+  // Where a block's row sits: the field for layers, the band for backgrounds.
+  const yOf = (row) =>
+    row >= LINKS_PER_VPU ? bandTop + (row - LINKS_PER_VPU) * CELL : y0 + row * CELL;
+
+  // Which output links belong to which screen. The manual puts this bar over the
+  // field (§5.5.5) and it is the thing that makes the columns readable: a screen
+  // owns a contiguous run of links, and its layers all start at the same one.
+  for (const s of screens) {
+    const sx = x0 + s.col * CELL;
+    const sw = s.width * CELL;
+    const g = svg('g', { class: `screen-bar ${colours.get(s.screen) || 'c1'}` });
+    g.append(
+      svg('title', {}, document.createTextNode(
+        `${screenWithName(s.screen)} · output link${s.width === 1 ? '' : 's'} 1-${s.width}`,
+      )),
+      svg('rect', { x: sx + 1.5, y: 2, width: sw - 3, height: HEAD, rx: 2 }),
+      svg('text', { x: sx + sw / 2, y: 2 + HEAD - 4 }, document.createTextNode(String(s.screen))),
+    );
+    root.append(g);
+  }
 
   // chassis
   root.append(
@@ -288,6 +323,15 @@ function renderVpu(grid, colours, optimized) {
       class: 'field', x: x0, y: y0, width: FIELD, height: FIELD, rx: 2,
     }),
   );
+  if (bandRows) {
+    root.append(
+      svg('rect', {
+        class: 'field band', x: x0, y: bandTop, width: FIELD, height: bandH, rx: 2,
+      }),
+      svg('text', { class: 'band-label', x: x0 - 6, y: bandTop + bandH / 2 + 3.5 },
+        document.createTextNode('bg')),
+    );
+  }
 
   // link lattice
   for (let i = 1; i < LINKS_PER_VPU; i++) {
@@ -295,9 +339,21 @@ function renderVpu(grid, colours, optimized) {
       svg('line', { class: 'lattice', x1: x0 + i * CELL, y1: y0, x2: x0 + i * CELL, y2: y0 + FIELD }),
       svg('line', { class: 'lattice', x1: x0, y1: y0 + i * CELL, x2: x0 + FIELD, y2: y0 + i * CELL }),
     );
+    if (bandRows) {
+      root.append(
+        svg('line', { class: 'lattice', x1: x0 + i * CELL, y1: bandTop, x2: x0 + i * CELL, y2: bandTop + bandH }),
+      );
+    }
+  }
+  for (let i = 1; i < bandRows; i++) {
+    root.append(
+      svg('line', { class: 'lattice', x1: x0, y1: bandTop + i * CELL, x2: x0 + FIELD, y2: bandTop + i * CELL }),
+    );
   }
 
-  // layer links in (left), output links out (top and bottom)
+  // layer links in (left) — eight of them, and only for the field: a background
+  // is not on a layer link. Output links out through the top and the bottom of
+  // whichever section is last.
   for (let i = 0; i < LINKS_PER_VPU; i++) {
     const cy = y0 + i * CELL + CELL / 2;
     root.append(
@@ -306,7 +362,11 @@ function renderVpu(grid, colours, optimized) {
     const cx = x0 + i * CELL + CELL / 2;
     root.append(
       svg('line', { class: 'out', x1: cx, y1: y0 - 16, x2: cx, y2: y0 - 3, 'marker-end': `url(#out-${grid.vpu})` }),
-      svg('line', { class: 'out', x1: cx, y1: y0 + FIELD + 3, x2: cx, y2: y0 + FIELD + 16, 'marker-end': `url(#out-${grid.vpu})` }),
+      svg('line', {
+        class: 'out',
+        x1: cx, y1: bandTop + bandH + 3, x2: cx, y2: bandTop + bandH + 16,
+        'marker-end': `url(#out-${grid.vpu})`,
+      }),
     );
   }
 
@@ -316,87 +376,129 @@ function renderVpu(grid, colours, optimized) {
       svg('path', { class: cls, d: 'M0,1 L7,4 L0,7 z' }));
   root.append(svg('defs', {}, marker(`in-${grid.vpu}`, 'ah-in'), marker(`out-${grid.vpu}`, 'ah-out')));
 
-  // layer blocks — a mixer occupies one cell per output link it drives, and the
-  // device reports those columns, so non-adjacent columns are drawn as they are
-  // rather than forced into a contiguous square.
+  // Layer blocks. A block is one layer: its own rows, no other layer on them, and
+  // one continuous bar across the output links it feeds. The device reports those
+  // links INTERLEAVED — S1 on 1 and 3, S3 on 2 and 4 — so the bar spans from the
+  // first to the last, and a crosspoint mark on each link it actually drives says
+  // which are its own. Rows are exclusive, so S3's bar sitting under S1's over the
+  // same columns is not a collision. The slices are inside the bar, on those links.
   for (const b of grid.blocks) {
     const colour = colours.get(b.screen) || 'c1';
-    const isNative = b.layer === 'NATIVE';
+    const isNative = b.background || b.layer === 'NATIVE';
     const cols = b.cols || [b.col];
     const span = b.size || 1;
-    const by = y0 + b.row * CELL;
-    const bh = span * CELL;
+    const rows = b.height || span;
+    const by = yOf(b.row);
+    const bh = rows * CELL;
+    const mixers = b.mixers || [b.mixer];
+    const slices = b.slices || [b.slice];
 
-    const g = svg('g', { class: `blk ${colour}${isNative ? '' : ' layered'}` });
+    const first = cols[0];
+    const last = cols[cols.length - 1];
+    const bx = x0 + first * CELL;
+    const bw = (last - first + span) * CELL;
+    // Links inside the bar that this layer does not drive — the interleave.
+    const skipped = [];
+    for (let c = first; c <= last; c++) if (!cols.includes(c)) skipped.push(c);
+
+    const g = svg('g', { class: `blk ${colour}${isNative ? ' bg' : ' layered'}` });
     g.append(
       svg('title', {}, document.createTextNode(
-        `${b.mixer}\n${screenWithName(b.screen)} · ${layerLabel(b.layer)} · slice ${b.slice}` +
+        `${mixers.join(', ')}\n${screenWithName(b.screen)} · ${layerLabel(b.layer)}` +
+        `\nslice${slices.length === 1 ? '' : 's'} ${slices.join(', ')}` +
         `\ncapability ${b.capability}` +
+        (isNative
+          ? '\nnative background — spends output capacity, not layer capacity'
+          : `\n${rows} layer-capacity link${rows === 1 ? '' : 's'}`) +
         (b.cutnfill && b.cutnfill !== 'OFF' ? `\ncut & fill ${b.cutnfill}` : '') +
-        `\noutput link${cols.length === 1 ? '' : 's'} ${cols.map((c) => c + 1).join(', ')}` +
-        (b.spansBoundary ? '\nspans the scaling-engine boundary' : ''),
+        `\n${screenWithName(b.screen)} output link${
+          (b.outputs || cols).length === 1 ? '' : 's'
+        } ${(b.outputs || cols.map((c) => c + 1)).join(', ')}` +
+        (b.wrapped ? '\nwrapped onto another layer link at the centre line (§5.5.4)' : ''),
       )),
     );
 
-    // Tie a mixer's separated cells together so it reads as one allocation.
-    // Drawn before the cells so it passes behind them, not across their labels.
-    if (cols.length > 1) {
-      const a = x0 + cols[0] * CELL + (span * CELL) / 2;
-      const z = x0 + cols[cols.length - 1] * CELL + (span * CELL) / 2;
-      g.append(svg('line', { class: 'tie', x1: a, y1: by + bh / 2, x2: z, y2: by + bh / 2 }));
+    // Adjacent links are one continuous crosspoint, not a row of cells: only a
+    // gap in what the device reports breaks the block.
+    const runs = [];
+    for (const c of cols) {
+      const tail = runs[runs.length - 1];
+      if (tail && c === tail[1] + 1) tail[1] = c;
+      else runs.push([c, c]);
     }
 
-    cols.forEach((c, i) => {
-      const bx = x0 + c * CELL;
-      const bw = span * CELL;
-      g.append(svg('rect', { x: bx + 1.5, y: by + 1.5, width: bw - 3, height: bh - 3, rx: 2 }));
-      // Label the first cell only; the rest are the same mixer.
-      if (i === 0) {
-        if (bw >= 46 && bh >= 40) {
-          g.append(
-            svg('text', { class: 'b-scr', x: bx + bw / 2, y: by + bh / 2 - 4 },
-              document.createTextNode(String(b.screen))),
-            svg('text', { class: 'b-ly', x: bx + bw / 2, y: by + bh / 2 + 8 },
-              document.createTextNode(isNative ? 'NAT' : `L${b.layer}`)),
-          );
-        } else {
-          g.append(svg('text', { class: 'b-scr sm', x: bx + bw / 2, y: by + bh / 2 + 3.5 },
-            document.createTextNode(String(b.screen))));
-        }
-      }
-    });
+    // When the device interleaves a layer's links — S1 on 1 and 3, S3 on 2 and 4 —
+    // a dashed outline over the whole reach says the pieces are one layer. With
+    // nothing skipped the block is already continuous and needs no outline.
+    if (runs.length > 1) {
+      g.append(svg('rect', {
+        class: 'span', x: bx + 1.5, y: by + 1.5, width: bw - 3, height: bh - 3, rx: 2,
+      }));
+    }
 
-    // the manual's wrap hook, for the derived fallback layout
-    if (b.wrapped && (b.col === 0 || cols[0] === 0)) {
+    for (const [from, to] of runs) {
+      g.append(svg('rect', {
+        class: 'xp',
+        x: x0 + from * CELL + 1.5,
+        y: by + 1.5,
+        width: (to - from + span) * CELL - 3,
+        height: bh - 3,
+        rx: 2,
+      }));
+    }
+
+    // The label sits in the block's first crosspoint. Rows separate layers now, so
+    // the layer has to be on it — four bars all reading "S1" says nothing.
+    const layerLabelShort = isNative ? 'NAT' : `L${b.layer}`;
+    if (bh >= 40) {
+      g.append(
+        svg('text', { class: 'b-scr', x: bx + CELL / 2, y: by + bh / 2 - 4 },
+          document.createTextNode(String(b.screen))),
+        svg('text', { class: 'b-ly', x: bx + CELL / 2, y: by + bh / 2 + 8 },
+          document.createTextNode(layerLabelShort)),
+      );
+    } else {
+      g.append(svg('text', { class: 'b-scr sm', x: bx + 5, y: by + bh / 2 + 3.5 },
+        document.createTextNode(`${b.screen} ${layerLabelShort}`)));
+    }
+    // Several slices ride one set of links — the count says how many.
+    if (slices.length > 1 && bh >= 24) {
+      g.append(svg('text', { class: 'b-sl', x: bx + bw - 4, y: by + bh - 4 },
+        document.createTextNode(`×${slices.length}`)));
+    }
+
+    // The manual's ↳ hook, at the start of a piece that had to take another layer
+    // link because the layer reached past the centre line (§5.5.4).
+    if (b.wrapped) {
+      const hx = bx - 9;
       g.append(svg('path', {
         class: 'hook',
-        d: `M${x0 - 9},${by - CELL + bh / 2} q0,${CELL / 2} 7,${CELL / 2}`,
+        d: `M${hx},${by - 9} L${hx},${by + bh / 2 - 4} q0,4 4,4 L${bx - 1},${by + bh / 2}`,
       }));
     }
     root.append(g);
   }
 
-  // Scaling-engine boundary — 4 output links (§5.5.4). Drawn last so it reads
-  // across the blocks it constrains rather than hiding behind them.
-  //
-  // Optimized mode REMOVES this boundary for the whole VPU (§5.5.6), so drawing
-  // it there would show a constraint the device is not applying.
-  if (!optimized) {
-    root.append(
-      svg('line', {
-        class: 'boundary',
-        x1: x0 + SCALING_ENGINE_BOUNDARY * CELL, y1: y0,
-        x2: x0 + SCALING_ENGINE_BOUNDARY * CELL, y2: y0 + FIELD,
-      }),
-    );
+
+  // Scaling-engine boundary — the centre line at 4 output links (§5.5.4). Drawn
+  // last so it reads across the blocks it constrains rather than hiding behind
+  // them, and drawn on every VPU: a layer-capacity link cannot cross it, which is
+  // why layers reaching both halves are split into two rows. Optimized mode is
+  // marked by the badge instead of by hiding the line, since the blocks either
+  // side of it are split there too.
+  const cls = `boundary${optimized ? ' soft' : ''}`;
+  const bnd = x0 + SCALING_ENGINE_BOUNDARY * CELL;
+  root.append(svg('line', { class: cls, x1: bnd, y1: y0, x2: bnd, y2: y0 + FIELD }));
+  if (bandRows) {
+    root.append(svg('line', { class: cls, x1: bnd, y1: bandTop, x2: bnd, y2: bandTop + bandH }));
   }
 
   return root;
 }
 
 function renderGrids(mixers, colours, screenStatus) {
-  const grids = buildLinkGrid(mixers);
   const optimised = optimizedVpus(mixers, screenStatus);
+  const grids = buildLinkGrid(mixers, optimised);
   els.grids.replaceChildren(
     ...grids.map((g) =>
       el(
@@ -410,13 +512,14 @@ function renderGrids(mixers, colours, screenStatus) {
           el('span', {
             text: g.fitted
               ? `${g.blocks.length} block${g.blocks.length === 1 ? '' : 's'} · ${g.rowsUsed}/${LINKS_PER_VPU} layer links` +
+                (g.backgroundRows ? ` · ${g.backgroundRows} background` : '') +
                 (g.spare ? ` · ${g.spare} spare` : '')
               : 'not fitted',
           }),
           optimised.has(g.vpu)
             ? el('span', {
                 class: 'badge',
-                title: 'Optimized mode: the 4-link scaling-engine boundary does not apply to this VPU (manual §5.5.6)',
+                title: 'Optimized mode is on for this VPU (manual §5.5.6) — one of its screens uses at least 5 output links and a capacity-2 layer',
                 text: 'optimized',
               })
             : null,
@@ -432,16 +535,19 @@ function renderGrids(mixers, colours, screenStatus) {
   els.derivedNote.replaceChildren(
     el('b', {
       text: reported
-        ? 'Columns are the device\u2019s own; rows are derived.'
+        ? 'Laid out the way the manual draws a VPU.'
         : 'Derived layout \u2014 position is not reported by the device.',
     }),
     el('span', {
       text: reported
-        ? `Each of these ${placed} mixers reports exactly which output links it drives, so horizontal ` +
-          'position is the device\u2019s. Nothing identifies the layer link, though \u2014 two layers of one ' +
-          'screen share both their output links and their slice numbers \u2014 so rows are packed: one row per ' +
-          'slice, starting at the first row where the run\u2019s columns are free. Runs on separate links share ' +
-          'rows; runs that collide stack.'
+        ? `Each of these ${placed} bars is one layer on the output links it drives. A screen owns a ` +
+          'contiguous run of links \u2014 the device reports which, in the value of each output pipe \u2014 so ' +
+          'all of a screen\u2019s layers start at the same one. A row is one layer-capacity link and carries ' +
+          'one layer, as many rows as the layer\u2019s capacity, so no two layers share a row and slices of ' +
+          'one layer share its bar. A layer past four output links wraps onto another link at the centre ' +
+          'line (\u00a75.5.4) unless Optimized mode lifts that for it (\u00a75.5.6). Native backgrounds spend ' +
+          'output capacity but not layer capacity, so they sit in the band below the eight links. Nothing ' +
+          'names the layer link itself, so only the order down the field is derived.'
         : `The device says what each of these ${placed} blocks serves (screen, layer, slice, capability) ` +
           'but not which link it occupies. Blocks are placed by laying each screen-and-layer run left to right ' +
           'in capacity-sized squares, wrapping onto another layer link when a run fills one. ' +
@@ -728,12 +834,37 @@ async function readDevice(ip, device, { quiet = false } = {}) {
   }
 }
 
+/**
+ * Fill the capture picker from data/captures.json.
+ *
+ * A missing or broken index is not an error worth showing: the tool still has
+ * the capture it has always had, so fall back to that one silently.
+ */
+async function loadCaptureIndex() {
+  try {
+    const res = await fetch(CAPTURE_INDEX);
+    if (!res.ok) throw new Error(String(res.status));
+    const body = await res.json();
+    const list = Array.isArray(body && body.captures) ? body.captures : [];
+    if (!list.length) throw new Error('empty index');
+    els.sample.replaceChildren(
+      ...list.map((c) =>
+        el('option', { value: `./data/${c.file}`, title: c.summary || '', text: c.label || c.file }),
+      ),
+    );
+    return true;
+  } catch {
+    els.sample.replaceChildren(el('option', { value: SAMPLE_URL, text: 'Recorded capture' }));
+    return false;
+  }
+}
+
 async function loadSample() {
   stopPolling();
   setStatus('busy', 'Loading capture…');
   clearBanner();
   try {
-    const res = await fetch(SAMPLE_URL);
+    const res = await fetch(els.sample.value || SAMPLE_URL);
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const body = await res.json();
     setStatus('sample', 'Recorded capture', describeSource(body.source, body.capturedAt));
@@ -836,6 +967,7 @@ els.form.addEventListener('submit', async (e) => {
 els.sampleBtn.addEventListener('click', loadSample);
 
 (async function init() {
+  await loadCaptureIndex();
   if (isDesktop()) {
     const note = document.getElementById('connNote');
     if (note) {

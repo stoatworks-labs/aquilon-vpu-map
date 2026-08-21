@@ -8,10 +8,19 @@ grid, or only *what* each mixer serves?
 **Columns yes, rows no.**
 
 - `mixerAllocation.usedOnOutPipe1..8` names exactly which output links each mixer
-  drives. There are **eight**, not two. Runs are **interleaved**: S1 on links 1 and 3,
-  S3 on 2 and 4, S2 on 5 and 7.
+  drives. There are **eight**, not two. The pipe KEYS are **interleaved**: S1 on pipes 1
+  and 3, S3 on 2 and 4, S2 on 5 and 7.
+- **The VALUE is the column, not the key.** `usedOnOutPipe3: '2'` means "the pipe I am
+  wired to is number 3, and it carries this screen's output link 2". The values run
+  1..n over the screen's own outputs, in order — a six-output screen reads 1,2,3,4 on
+  one mixer and 5,6 on the next — which is exactly how the manual draws it (§5.5.4): a
+  screen owns a contiguous run of links. Reading the keys as columns scatters a screen's
+  layers and lets a bar cross the centre line, which cannot happen.
 - Nothing names the layer link. Two layers of one screen share their links *and* their
-  slice numbers, and `channel` is 0 on every mixer.
+  slice numbers, and `channel` is 0 on every mixer. The grid does not need it named to
+  be right: a row is one layer-capacity link carrying one layer, the links a layer
+  spends are its capability, and a layer past four output links wraps — so only the
+  order down the field is derived, and it follows the mixer allocation order.
 - **`$vpuLayer` and `$pipe` answer `E12` on hardware.** They exist but are permanently
   empty on the simulator — the two implementations expose different collections
   (hardware: `vpuMixerList` only; simulator: `pipeList` + `vpuLayerList` only).
@@ -117,8 +126,8 @@ It is not. **On hardware the whole collection answers `E12`** — it does not ex
 the simulator it exists and is permanently empty. The step is kept so that a firmware
 which starts populating it announces itself.
 
-**If it ever does populate**, it supersedes the packed rows: map scaler → row,
-`usedOnOutPipe<n>` → columns, and drop the row-packing in `buildLinkGrid()` to a
+**If it ever does populate**, it supersedes the derived row order: map scaler → row,
+`usedOnOutPipe<n>` → columns, and drop the ordering in `buildLinkGrid()` to a
 fallback. That would also settle §5.5.4 directly — whether a wrapped layer really
 does occupy two scalers — instead of by inference.
 

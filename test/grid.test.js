@@ -11,6 +11,7 @@ import {
   buildLinkGrid,
   deriveLinkGrid,
   reportedColumns,
+  reportedOutputs,
   optimizedVpus,
   capacityToLinks,
   LINKS_PER_VPU,
@@ -126,40 +127,7 @@ test('deriveLinkGrid tolerates empty input', () => {
 
 /* ---------- reported columns (hardware, 2026-08-21) ---------- */
 
-test('buildLinkGrid uses the device’s own output links for columns', () => {
-  const grid = buildLinkGrid(snapshot.current);
-  const p1 = grid.find((g) => g.vpu === 1);
-  assert.equal(p1.placement, 'reported-columns');
 
-  const runCols = (g, screen, layer) => {
-    const b = g.blocks.find((x) => x.screen === screen && x.layer === layer);
-    return b.cols.map((c) => c + 1);
-  };
-  // Interleaved, exactly as the hardware reports it.
-  assert.deepEqual(runCols(p1, 'S1', 'NATIVE'), [1, 3]);
-  assert.deepEqual(runCols(p1, 'S3', 'NATIVE'), [2, 4]);
-  assert.deepEqual(runCols(p1, 'S2', 'NATIVE'), [5, 7]);
-});
-
-test('runs on disjoint links share rows; runs that collide stack', () => {
-  const grid = buildLinkGrid(snapshot.current);
-
-  const rows = (g, screen, layer) => {
-    const rs = g.blocks.filter((b) => b.screen === screen && b.layer === layer).map((b) => b.row);
-    return [Math.min(...rs), Math.max(...rs)];
-  };
-
-  // VPU 1: three runs, none sharing a link, so all start at row 0.
-  const p1 = grid.find((g) => g.vpu === 1);
-  assert.deepEqual(rows(p1, 'S1', 'NATIVE'), [0, 3]);
-  assert.deepEqual(rows(p1, 'S2', 'NATIVE'), [0, 3]);
-  assert.deepEqual(rows(p1, 'S3', 'NATIVE'), [0, 7]);
-
-  // VPU 2: S4's native and layer 1 share links 5 and 7, so layer 1 stacks below.
-  const p2 = grid.find((g) => g.vpu === 2);
-  assert.deepEqual(rows(p2, 'S4', 'NATIVE'), [0, 3]);
-  assert.deepEqual(rows(p2, 'S4', '1'), [4, 7]);
-});
 
 test('no cell is claimed twice, and nothing overflows', () => {
   for (const g of buildLinkGrid(snapshot.current)) {
@@ -216,27 +184,6 @@ test('a run can have several mixers per slice, on different links', () => {
   }
 });
 
-test('mixers sharing a slice share a row; layers of one screen stack', () => {
-  const p1 = buildLinkGrid(sixOut.current).find((g) => g.vpu === 1);
-  assert.equal(p1.placement, 'reported-columns');
-
-  const rowsOf = (screen, layer) => {
-    const rs = p1.blocks.filter((b) => b.screen === screen && b.layer === layer).map((b) => b.row);
-    return [...new Set(rs)].sort((a, b) => a - b);
-  };
-
-  // Two slices, so two rows — not four, despite four mixers.
-  assert.deepEqual(rowsOf('S1', 'NATIVE'), [0, 1]);
-  // Native, layer 1 and layer 2 all want the same links, so they stack.
-  assert.deepEqual(rowsOf('S1', '1'), [2, 3]);
-  assert.deepEqual(rowsOf('S1', '2'), [4, 5]);
-  // S2's 5K layer is on links 6 and 8, which nothing else touches, so it starts
-  // at row 0 alongside S1 rather than below it.
-  assert.deepEqual(rowsOf('S2', 'NATIVE'), [0, 1, 2, 3]);
-
-  assert.equal(p1.rowsUsed, 6, 'six of eight layer links used');
-  assert.equal(p1.overflow, false);
-});
 
 test('both real captures pack without collisions', () => {
   for (const snap of [snapshot, sixOut]) {
@@ -305,4 +252,179 @@ test('screen names are never committed to the captures', () => {
     assert.equal(snap.screens, undefined, `${snap.note?.slice(0, 24)}… has no screen names`);
     assert.equal(snap.source.host, 'redacted');
   }
+});
+
+/* ---------- the manual's grid, §5.5.2 to §5.5.6 ---------- */
+
+const optimisedVpusOf = (snap) => optimizedVpus(snap.current, (snap.screenStatus || {}).current);
+const gridOf = (snap) => buildLinkGrid(snap.current, optimisedVpusOf(snap));
+
+test('a screen owns a contiguous run of output links', () => {
+  // §5.5.4: two four-output screens fill a VPU as links 1-4 and 5-8. The device's
+  // usedOnOutPipe KEYS are interleaved and are not that order — its VALUES are.
+  const p1 = gridOf(sixOut).find((g) => g.vpu === 1);
+  assert.deepEqual(
+    p1.screens.map((s) => [s.screen, s.col, s.width]),
+    [['S1', 0, 6], ['S2', 6, 2]],
+    'the six-output screen takes links 1-6, the two-output screen 7-8',
+  );
+  assert.equal(p1.columnsUsed, 8, 'exactly full');
+
+  // Every block sits inside its own screen's run, and every screen's layers
+  // start at the same link.
+  for (const snap of [snapshot, sixOut, optimized]) {
+    for (const g of gridOf(snap)) {
+      for (const b of g.blocks) {
+        const s = g.screens.find((x) => x.screen === b.screen);
+        assert.ok(
+          b.cols.every((c) => c >= s.col && c < s.col + s.width),
+          `${b.mixer} outside ${b.screen}'s links`,
+        );
+      }
+    }
+  }
+});
+
+test('a layer’s bar is continuous', () => {
+  for (const snap of [snapshot, sixOut, optimized]) {
+    for (const g of gridOf(snap)) {
+      for (const b of g.blocks) {
+        for (let i = 1; i < b.cols.length; i++) {
+          assert.equal(b.cols[i], b.cols[i - 1] + 1, `${b.mixer} has a gap: ${b.cols}`);
+        }
+      }
+    }
+  }
+});
+
+test('no two layers ever share a layer link', () => {
+  // The rule the whole grid rests on: a row is one layer-capacity link and it
+  // carries ONE layer. This is what the old row-packing broke — it put S1, S2 and
+  // S3 all on layer link 1 of the captured VPU 1.
+  for (const snap of [snapshot, sixOut, optimized]) {
+    for (const g of gridOf(snap)) {
+      const owner = new Map();
+      for (const b of g.blocks) {
+        for (let r = b.row; r < b.row + b.height; r++) {
+          const who = `${b.screen} ${b.layer}`;
+          const already = owner.get(r);
+          assert.ok(
+            already === undefined || already === who,
+            `VPU ${g.vpu} link ${r}: ${already} and ${who} on one row`,
+          );
+          owner.set(r, who);
+        }
+      }
+    }
+  }
+});
+
+test('a layer is as tall as its capability, and slices do not add rows', () => {
+  const p2 = gridOf(snapshot).find((g) => g.vpu === 2);
+
+  // S3's layer 1 is four slices of one 4K layer. 4K is capacity 2 — two layer
+  // links — and the four slices share them.
+  const s3 = p2.blocks.filter((b) => b.screen === 'S3' && b.layer === '1');
+  assert.equal(s3.length, 1, 'one block, not one per slice');
+  assert.equal(s3[0].height, capacityToLinks('4K'));
+  assert.equal(capacityToLinks('4K'), 2, 'dual link is capacity 1; 4K60 is capacity 2');
+  assert.deepEqual(s3[0].slices, [0, 1, 2, 3]);
+  assert.equal(s3[0].mixers.length, 4);
+
+  // A 5K layer is four links tall.
+  const s2 = gridOf(sixOut)
+    .find((g) => g.vpu === 1)
+    .blocks.find((b) => b.screen === 'S2' && b.layer === 'NATIVE');
+  assert.equal(s2.capability, '5K');
+  assert.equal(s2.height, 4);
+});
+
+test('a layer past four output links wraps onto another layer link (§5.5.4)', () => {
+  // The manual's own figure: a six-output screen's layer is links 1-4 on one row
+  // and 5-6 on the next, with the hook. Nothing crosses the centre line.
+  const p1 = gridOf(sixOut).find((g) => g.vpu === 1);
+  const l1 = p1.blocks.filter((b) => b.screen === 'S1' && b.layer === '1');
+
+  assert.equal(l1.length, 2, 'two pieces');
+  assert.deepEqual(l1.map((b) => b.cols.map((c) => c + 1)), [[1, 2, 3, 4], [5, 6]]);
+  assert.deepEqual(l1.map((b) => b.row), [l1[0].row, l1[0].row + 2], 'the next links down');
+  assert.ok(!l1[0].wrapped && l1[1].wrapped, 'the second piece is the wrap');
+  assert.ok(l1.every((b) => b.height === 2), 'each piece is a whole capacity-2 layer');
+
+  for (const snap of [snapshot, sixOut, optimized]) {
+    for (const g of gridOf(snap)) {
+      for (const b of g.blocks) {
+        if (optimisedVpusOf(snap).has(g.vpu) && b.height >= 2) continue;
+        const left = b.cols.some((c) => c < SCALING_ENGINE_BOUNDARY);
+        const right = b.cols.some((c) => c >= SCALING_ENGINE_BOUNDARY);
+        assert.ok(!(left && right), `${b.mixer} crosses the centre line`);
+      }
+    }
+  }
+});
+
+test('Optimized mode lifts the boundary for capacity-2 layers (§5.5.6)', () => {
+  // Same six-output shape as above, but this VPU reports Optimized, so the layer
+  // is one unbroken bar over all six links instead of wrapping.
+  const opt = optimisedVpusOf(optimized);
+  assert.deepEqual([...opt], [1]);
+
+  const p1 = gridOf(optimized).find((g) => g.vpu === 1);
+  const l1 = p1.blocks.filter((b) => b.screen === 'S1' && b.layer === '1');
+  assert.equal(l1.length, 1, 'no wrap');
+  assert.deepEqual(l1[0].cols.map((c) => c + 1), [1, 2, 3, 4, 5, 6]);
+
+  // ...and S2's layer starts below S1's two, not beside them.
+  const s2 = p1.blocks.find((b) => b.screen === 'S2' && b.layer === '1');
+  assert.equal(s2.row, 4, 'after S1 layer 1 and layer 2, two links each');
+  assert.deepEqual(s2.cols.map((c) => c + 1), [7, 8]);
+
+  // Without the Optimized set it wraps, which is the same VPU read wrongly.
+  const naive = buildLinkGrid(optimized.current).find((g) => g.vpu === 1);
+  assert.equal(naive.blocks.filter((b) => b.screen === 'S1' && b.layer === '1').length, 2);
+});
+
+test('native backgrounds sit below the eight layer links', () => {
+  // They hold mixers and drive output links, but they are not layer capacity —
+  // so they are laid out in their own band and left out of rowsUsed.
+  for (const snap of [snapshot, sixOut, optimized]) {
+    for (const g of gridOf(snap)) {
+      for (const b of g.blocks) {
+        if (b.layer === 'NATIVE') {
+          assert.equal(b.section, 'background');
+          assert.ok(b.row >= LINKS_PER_VPU, `${b.mixer} at row ${b.row}`);
+        } else {
+          assert.equal(b.section, 'layer');
+          assert.ok(b.row < LINKS_PER_VPU, `${b.mixer} at row ${b.row}`);
+        }
+      }
+      const bg = g.blocks.filter((b) => b.section === 'background');
+      assert.equal(g.backgroundRows, bg.reduce((n, b) => n + b.height, 0));
+    }
+  }
+});
+
+test('every real capture fits its eight layer links', () => {
+  // The base capture spends none at all: all 16 of VPU 1's mixers are natives.
+  // The six-output capture fills VPU 1 exactly — two layers, wrapped, 8 of 8.
+  const rows = (snap) => gridOf(snap).filter((g) => g.fitted).map((g) => g.rowsUsed);
+  assert.deepEqual(rows(snapshot), [0, 4]);
+  assert.deepEqual(rows(sixOut), [8, 0]);
+  assert.deepEqual(rows(optimized), [6, 2]);
+
+  for (const snap of [snapshot, sixOut, optimized]) {
+    for (const g of gridOf(snap)) {
+      assert.equal(g.overflow, false, `VPU ${g.vpu} fits`);
+      assert.ok(g.rowsUsed <= LINKS_PER_VPU);
+      assert.ok(g.columnsUsed <= LINKS_PER_VPU, `VPU ${g.vpu} columns ${g.columnsUsed}`);
+    }
+  }
+});
+
+test('the reported pipe keys are not the columns', () => {
+  // Keeping the distinction honest: a six-output screen's first mixer is wired to
+  // pipes 1,3,5,7 and carries the screen's links 1,2,3,4.
+  const m = sixOut.current.PROC_1_MIXER_1;
+  assert.deepEqual(reportedColumns(m), [0, 2, 4, 6], 'VPU pipes, interleaved');
+  assert.deepEqual(reportedOutputs(m), [1, 2, 3, 4], 'the screen’s own links, in order');
 });

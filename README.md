@@ -22,30 +22,68 @@ a time. This puts the whole chassis on one screen.
 ![Each VPU as an 8x8 field of links](docs/link-grid.png)
 
 The manual draws a VPU as an **8×8 field of links** — eight layer links in from the
-left, eight output links out through the top and bottom (User Manual v6.0 §5.5). A
-layer occupies a square block sized by its capacity: capacity 1 is 1×1 links,
-capacity 2 is 2×2, capacity 4 is 4×4. So one VPU holds 64 capacity-1 layers, 16
-capacity-2 ones, or 4 capacity-4 ones.
+left, eight output links out through the top and bottom (User Manual v6.2 §5.5). It is
+a crosspoint field, and the view follows the manual's own figures:
 
-A VPU spreads a layer over at most **4 output links**; a layer wider than that takes
-a second layer link and wraps onto it (§5.5.4), which the view marks with the
-manual's hook. A screen needing more than 8 outputs spills into another VPU (§5.5.5).
+- **A row is one layer-capacity link, and it carries one layer.** Two layers never
+  share a row. A layer is as tall as its capacity: dual link (up to 4K30) is 1, 4K60
+  is 2, 5K60 is 4.
+- **Columns belong to screens.** Each screen owns a contiguous run of output links, as
+  wide as the number of outputs it uses, and screens sit side by side — two four-output
+  screens fill a VPU as links 1–4 and 5–8 (§5.5.4). All of a screen's layers therefore
+  start at the same link.
+- **A layer's bar is continuous, and breaks at the centre line.** A layer spread over
+  more than four output links takes another layer link and wraps onto it (§5.5.4),
+  drawn with the manual's hook. A twelve-output screen's layer costs three links, over
+  two VPUs (§5.5.5).
+- **Optimized mode lifts that boundary for capacity-2 layers, and only those** (§5.5.6),
+  so on an optimized VPU their bars run unbroken across the centre line.
+- **A screen's native background is not layer capacity.** It is reported like a layer
+  and holds mixers, but it is drawn dimmed in a band below the field and left out of
+  the layer-link count.
 
-> **Columns are the device's own; rows are derived.**
+> **The columns come from the values, not the keys.**
 >
-> Each mixer reports `usedOnOutPipe1..8` — exactly which output links it drives — so
-> horizontal position is real. It is also not what you would guess: runs are
-> **interleaved**, not contiguous. On the captured Aquilon C, S1 sits on links 1 and 3,
-> S3 on 2 and 4, S2 on 5 and 7.
+> `usedOnOutPipe<k>: '<n>'` is a pair, and the two halves disagree. The key is the VPU
+> pipe the mixer is wired to and those are **interleaved** — a six-output screen's first
+> mixer sits on pipes 1, 3, 5 and 7. The value is which of the *screen's* output links
+> that pipe carries, and those are 1, 2, 3, 4: in order, contiguous, and what the manual
+> draws. Reading the keys as columns puts a screen's layers on scattered links and lets
+> a bar reach across the centre line, which the hardware cannot do.
 >
-> Nothing names the layer link, though. Two layers of one screen share both their output
-> links *and* their slice numbers — S4's native and its layer 1 are identical on both —
-> so rows are packed: one row per slice, starting at the first row where the run's
-> columns are free. Runs on separate links share rows; runs that collide stack.
+> Nothing names the layer link — the row — at all. It does not need to: the rules above
+> fix how many links each layer spends and forbid sharing, so only the order down the
+> field is ours, and it follows the device's own mixer allocation order.
 >
 > `$vpuLayer`, which looked like the reported grid, **does not exist on hardware** — it
 > answers `E12`, as does `$pipe`. Both are present but permanently empty on the
 > simulator. See [docs/HARDWARE-PROBE.md](docs/HARDWARE-PROBE.md).
+
+## Working without a device
+
+There is no Aquilon to read here any more, so the three recorded configurations in
+[`data/`](data) are the whole ground truth. Every one is offered in the app's
+**Recorded capture** picker, and the tests run off them.
+
+```
+node scripts/capture-config.mjs --report
+```
+
+audits them with no device needed: what each capture proves, and which questions
+none of them can answer — a capacity-1 layer, an over-budget configuration, Cut &
+Fill actually enabled, a screen too wide for one VPU. Each of those is a
+configuration somebody with hardware has to build.
+
+If you are that somebody, [docs/CAPTURE-GUIDE.md](docs/CAPTURE-GUIDE.md) is written
+for you and assumes nothing: what to set up, what to run, and what it settles.
+Recording one is
+
+```
+node scripts/capture-config.mjs <ip> --name capacity-1 --label "Dual-link layer"
+```
+
+which writes a redacted capture into `data/` and lists it in the picker. It reads
+only, like everything else here.
 
 ## What a VPU mixer is
 

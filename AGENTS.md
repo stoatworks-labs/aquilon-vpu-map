@@ -20,10 +20,14 @@ device reports that allocation read-only over AWJ. This app reads it and draws i
 - **`current` vs `new`.** The device holds a running mapping and a staged one. Diffing
   them shows what applying a pending configuration would cost, before anyone applies it.
 - **The link grid is the manual's model, and it is a different thing.** User Manual
-  v6.0 §5.5 draws a VPU as an 8×8 field of *links* — 8 layer links in, 8 output links
-  out — where a layer occupies a square sized by its capacity (1→1×1, 2→2×2, 4→4×4).
-  The two views agree numerically: 16 mixers per VPU is exactly a 4×4 packing of
-  capacity-2 blocks over 64 links, and the captured Aquilon C reports precisely that.
+  v6.2 §5.5 draws a VPU as an 8×8 field of *links* — 8 layer links in, 8 output links
+  out. **Read those pages before touching the grid** (`Aquilon_User_Manual_v6.2.pdf`,
+  §5.5.1–§5.5.7, PDF pages 66–70): the diagrams carry the model and the prose does not.
+  A row is one layer-capacity link carrying **one** layer, as many rows as the layer's
+  capacity (dual link 1, 4K60 2, 5K60 4); a column is one output link, and each screen
+  owns a **contiguous** run of them. A layer past four output links wraps onto another
+  layer link (§5.5.4) unless Optimized mode lifts that for capacity-2 layers (§5.5.6).
+  Squares are not the model — that was an early guess, and it was wrong.
 
 ## Load-bearing invariants
 
@@ -79,24 +83,37 @@ links a mixer drives. There are **eight** of these, not two — an earlier read 
 only pipes 1 and 2 and so saw a quarter of the device's own placement data. Every mixer
 in a (screen, layer) run shares the same set.
 
-**Runs are interleaved, not contiguous.** On the captured Aquilon C: S1 on links 1 and
-3, S3 on 2 and 4, S2 on 5 and 7. So the grid must draw the links the device names,
-rather than packing each mixer into a contiguous square — which is what the first,
-purely derived version did, and it was wrong in a way that looked plausible.
+**The pipe KEYS are interleaved; the VALUES are the columns.** `usedOnOutPipe<k>:
+'<n>'` is a pair whose halves disagree. The key is the VPU pipe the mixer is wired to,
+and those interleave: on the captured Aquilon C, S1 on pipes 1 and 3, S3 on 2 and 4,
+S2 on 5 and 7. The **value** is which of the *screen's* own output links that pipe
+carries — 1..n, in order. A six-output screen's first mixer reads pipes 1,3,5,7
+carrying links 1,2,3,4, and its second reads pipes 2,4 carrying links 5,6.
+
+Draw the values. `reportedOutputs()` reads them; `reportedColumns()` still reads the
+keys, which are only the wiring. Drawing the keys scatters a screen's layers across the
+field and lets a bar reach across the centre line, which the hardware cannot do — the
+grid did exactly that until 2026-08-21, and it looked plausible.
 
 **Slice does NOT uniquely identify a mixer within a run.** A layer spread over more
 than four output links is carried by a *second* mixer on a different set of links
 (§5.5.4) — the same slice, different pipes. A six-output screen shows as slices
-`[0,0,1,1]`: two mixers per slice, one on links 1,3,5,7 (outputs 1-4) and one on links
-2,4 (outputs 5,6). So **columns are per mixer, never per run**, and rows come from the
-run's distinct slices rather than its mixer count. Mixers sharing a slice share a row,
-because their links do not overlap.
+`[0,0,1,1]`: two mixers per slice. Slices do **not** add rows, though: the mixers of one
+slice-run are the same layer on the same links, so they share a bar and the count is
+drawn in its corner.
 
-**Rows: not reported.** Nothing names the layer link. Two layers of one screen share
-both their output links and their slice numbers (S4's native and its layer 1 are
-identical on both), so slice cannot separate them, and `channel` reads 0 everywhere.
-`buildLinkGrid()` packs rows: one row per slice, starting at the first row where the
-run's columns are free. Runs on disjoint links share rows; runs that collide stack.
+**Rows: not reported, but not free either.** Nothing names the layer link — two layers
+of one screen share both their output links and their slice numbers, and `channel` reads
+0 everywhere. The rules fix everything except the order: a row carries one layer, a
+layer spends as many rows as its capacity, and a layer reaching past four output links
+takes another. So only the order down the field is ours, and it follows the device's own
+mixer allocation order. `buildLinkGrid()` used to *pack* rows instead — one per slice, at
+the first row where the columns were free — which put three different layers on layer
+link 1 of the captured VPU 1. It cannot happen; do not reintroduce it.
+
+**A screen's native layer is not layer capacity.** It is reported like a layer and holds
+mixers, but it spends output capacity only, so it is drawn in a band below the eight
+links and left out of `rowsUsed`.
 
 **`$vpuLayer` does not exist on hardware.** It answers `E12`, as does `$pipe`. Both are
 present-but-permanently-empty on the *simulator*. This is the general lesson:
@@ -150,7 +167,13 @@ leaf-read-only limitation entirely.
 
 **Not verified:**
 
-- **Which layer link (row) anything sits on.** Columns are the device's; rows are packed.
+- **Which layer link (row) anything sits on.** How many links a layer spends is fixed by
+  the manual's rules; the order down the field is ours.
+- **Everything in the gap list.** `node scripts/capture-config.mjs --report` prints it:
+  a capacity-1 (`DUAL`) layer has never been seen, nothing has ever been over budget,
+  and Cut & Fill has never been captured with the effect actually on. There is no longer
+  an Aquilon here, so closing those needs somebody else's device —
+  [docs/CAPTURE-GUIDE.md](docs/CAPTURE-GUIDE.md) is written for them.
 - Capacities other than `4K` and `5K`. `capacityToLinks()` now reads the position in
   the device's own `LAYER_CAPABILITIES` enum (`OFF, DUAL, 4K, 3, 5K, 5, 6, 7, 8K`),
   where the bare numbers sit at their own index — so DUAL is 1, 4K is 2, 5K is 4, 8K

@@ -301,6 +301,9 @@ h2 { font-family:"Archivo",system-ui,sans-serif; font-weight:700; font-size:19px
 .derived-note[data-kind="partial"] { border-left-color:var(--accent); }
 
 svg.vpu .tie { stroke:currentColor; stroke-width:1.5; opacity:.55; stroke-dasharray:2 2; }
+/* A crosspoint block is continuous across adjacent links; the dashed outline
+   appears only when the device interleaves a layer and the block is in pieces. */
+svg.vpu .blk rect.span { fill:none; stroke-dasharray:3 2; opacity:.8; }
 svg.vpu .blk.c1 .tie { color:var(--s1); } svg.vpu .blk.c2 .tie { color:var(--s2); }
 svg.vpu .blk.c3 .tie { color:var(--s3); } svg.vpu .blk.c4 .tie { color:var(--s4); }
 svg.vpu .blk.c5 .tie { color:var(--s5); } svg.vpu .blk.c6 .tie { color:var(--s6); }
@@ -324,7 +327,31 @@ svg.vpu .blk.c5 .tie { color:var(--s5); } svg.vpu .blk.c6 .tie { color:var(--s6)
 svg.vpu { width:100%; height:auto; display:block; }
 svg.vpu .field { fill:var(--panel-sunk); stroke:var(--rule); stroke-width:1.5; }
 svg.vpu .lattice { stroke:var(--rule-soft); stroke-width:1; }
+/* the screen bar over the output links — which links belong to which screen */
+svg.vpu .screen-bar rect { stroke-width:1.5; }
+svg.vpu .screen-bar text {
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:9px; font-weight:600; text-anchor:middle; pointer-events:none;
+}
+svg.vpu .screen-bar.c1 rect { fill:var(--s1-tint); stroke:var(--s1); }
+svg.vpu .screen-bar.c2 rect { fill:var(--s2-tint); stroke:var(--s2); }
+svg.vpu .screen-bar.c3 rect { fill:var(--s3-tint); stroke:var(--s3); }
+svg.vpu .screen-bar.c4 rect { fill:var(--s4-tint); stroke:var(--s4); }
+svg.vpu .screen-bar.c5 rect { fill:var(--s5-tint); stroke:var(--s5); }
+svg.vpu .screen-bar.c6 rect { fill:var(--s6-tint); stroke:var(--s6); }
+svg.vpu .screen-bar.c1 text { fill:var(--s1); } svg.vpu .screen-bar.c2 text { fill:var(--s2); }
+svg.vpu .screen-bar.c3 text { fill:var(--s3); } svg.vpu .screen-bar.c4 text { fill:var(--s4); }
+svg.vpu .screen-bar.c5 text { fill:var(--s5); } svg.vpu .screen-bar.c6 text { fill:var(--s6); }
+/* the background band: output capacity, but not one of the eight layer links */
+svg.vpu .field.band { stroke-dasharray:4 3; opacity:.75; }
+svg.vpu .band-label {
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:8px; letter-spacing:.06em; text-anchor:end;
+  fill:var(--ink-soft); opacity:.8;
+}
 svg.vpu .boundary { stroke:var(--ink-soft); stroke-width:1.5; stroke-dasharray:4 3; opacity:.7; pointer-events:none; }
+/* optimized mode: still the bound on a capacity link, drawn quieter */
+svg.vpu .boundary.soft { opacity:.3; }
 svg.vpu .in  { stroke:var(--accent); stroke-width:1.5; }
 svg.vpu .out { stroke:var(--ink-soft); stroke-width:1.5; }
 svg.vpu .ah-in  { fill:var(--accent); }
@@ -339,15 +366,21 @@ svg.vpu .blk.c4 rect { fill:var(--s4-tint); stroke:var(--s4); }
 svg.vpu .blk.c5 rect { fill:var(--s5-tint); stroke:var(--s5); }
 svg.vpu .blk.c6 rect { fill:var(--s6-tint); stroke:var(--s6); }
 /* a numbered layer reads as an outline, native as a filled block */
-svg.vpu .blk.layered rect { fill:var(--panel-sunk); stroke-dasharray:3 2; }
+svg.vpu .blk.layered rect.xp { fill:var(--panel-sunk); }
+/* a native background is drawn dimmed: it holds mixers and output links, but
+   it is not spending any of the eight layer-capacity links above it */
+svg.vpu .blk.bg rect { opacity:.55; }
+svg.vpu .blk.bg text { opacity:.7; }
 
 svg.vpu .blk text {
   font-family:"IBM Plex Mono",ui-monospace,monospace;
   text-anchor:middle; pointer-events:none;
 }
 svg.vpu .blk .b-scr { font-size:11px; font-weight:600; }
-svg.vpu .blk .b-scr.sm { font-size:9px; }
+svg.vpu .blk .b-scr.sm { font-size:8px; text-anchor:start; letter-spacing:-.02em; }
 svg.vpu .blk .b-ly { font-size:7.5px; letter-spacing:.06em; opacity:.85; }
+/* several slices of one layer share its block, so the count sits in the corner */
+svg.vpu .blk .b-sl { font-size:7.5px; text-anchor:end; opacity:.75; }
 svg.vpu .blk.c1 text { fill:var(--s1); } svg.vpu .blk.c2 text { fill:var(--s2); }
 svg.vpu .blk.c3 text { fill:var(--s3); } svg.vpu .blk.c4 text { fill:var(--s4); }
 svg.vpu .blk.c5 text { fill:var(--s5); } svg.vpu .blk.c6 text { fill:var(--s6); }
