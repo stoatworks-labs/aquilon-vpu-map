@@ -1,0 +1,80 @@
+# Desktop app builds.
+#
+# The server build (npm start / Docker) needs Node on the machine; a tech on a
+# show cannot be assumed to have it, or Docker, or a checkout. These are the
+# double-click artifacts.
+#
+# NOT SIGNED. macOS Gatekeeper refuses an unsigned .dmg from the internet with a
+# message that reads like corruption rather than a permission prompt — see the
+# release notes. Signing goes through the fleet's Apple path when it is wired up
+# here; until then this is a known gap, stated rather than hidden.
+
+name: desktop
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            name: macOS (Apple silicon)
+          - platform: macos-13
+            target: x86_64-apple-darwin
+            name: macOS (Intel)
+          - platform: ubuntu-22.04
+            target: ''
+            name: Linux
+          - platform: windows-latest
+            target: ''
+            name: Windows
+
+    runs-on: ${{ matrix.platform }}
+    name: ${{ matrix.name }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # Tauri's Linux build needs the webkit2gtk stack; nothing else does.
+      - name: Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      # The read path has its own tests, including one asserting that every
+      # frame this app can send is a `get`. Run them before bundling anything.
+      - name: Test the read path
+        working-directory: src-tauri
+        run: cargo test
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: 'Aquilon VPU Map __VERSION__'
+          releaseDraft: false
+          prerelease: false

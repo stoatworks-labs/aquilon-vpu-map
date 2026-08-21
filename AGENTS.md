@@ -193,6 +193,26 @@ slice), and **S2 is `5K`**. The tests run against both, because the first one al
 supports assumptions the second disproves. If a third configuration turns up, add it
 rather than editing either.
 
+## Two builds, one UI
+
+`public/` is the whole interface and is shared. The only thing that differs is how
+a reading is fetched, and it is isolated to `readVpu()` in `public/app.js`:
+
+- **Desktop (Tauri):** `invoke('read_vpu')` — `src-tauri/src/read.rs` makes the AWJ
+  connection in Rust.
+- **Server (Node):** `fetch('./api/vpu')` — `lib/read.js` does it, because a browser
+  cannot open a TCP socket.
+
+**Both must return the same JSON shape.** Change a field in one and change it in the
+other, or the UI silently renders half a view on one build only. There is no branch
+below `readVpu()` and there should not be.
+
+`scripts/stage-frontend.mjs` assembles `dist-frontend/` for Tauri (public/ at the root,
+data/ beneath) rather than duplicating any file in the repo.
+
+The Rust side has its own tests against a scripted AWJ responder, including
+`only_ever_sends_get`, which asserts the safety claim rather than commenting it.
+
 ## Layout
 
 ```

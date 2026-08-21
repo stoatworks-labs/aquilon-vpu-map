@@ -651,6 +651,34 @@ function render(payload) {
 
 /* ---------------- data ---------------- */
 
+/**
+ * The one place that differs between the two builds.
+ *
+ * Desktop (Tauri): Rust makes the AWJ connection and `read_vpu` returns the
+ * same JSON shape the server's /api/vpu returns.
+ * Server (Node): the bridge does it, because a browser cannot open a TCP socket.
+ *
+ * Everything below this line is identical either way, which is the point —
+ * one UI, and no branch inside the rendering.
+ */
+const isDesktop = () => typeof window !== 'undefined' && !!window.__TAURI__;
+
+async function readVpu(ip, device) {
+  if (isDesktop()) {
+    try {
+      return await window.__TAURI__.core.invoke('read_vpu', { ip, device });
+    } catch (err) {
+      // A rejected command carries the reason as a plain string.
+      return { ok: false, code: 'READ_FAILED', error: String(err), source: { host: ip, device } };
+    }
+  }
+  const res = await fetch(
+    `./api/vpu?ip=${encodeURIComponent(ip)}&device=${encodeURIComponent(device)}`,
+  );
+  return res.json();
+}
+
+
 function describeSource(src, capturedAt) {
   const when = capturedAt ? new Date(capturedAt).toLocaleString() : '';
   if (!src) return when;
@@ -668,10 +696,7 @@ async function readDevice(ip, device, { quiet = false } = {}) {
   }
 
   try {
-    const res = await fetch(
-      `./api/vpu?ip=${encodeURIComponent(ip)}&device=${encodeURIComponent(device)}`,
-    );
-    const body = await res.json();
+    const body = await readVpu(ip, device);
 
     if (!body.ok) {
       if (body.code === 'NO_VPU_SUBTREE') {
@@ -811,10 +836,18 @@ els.form.addEventListener('submit', async (e) => {
 els.sampleBtn.addEventListener('click', loadSample);
 
 (async function init() {
+  if (isDesktop()) {
+    const note = document.getElementById('connNote');
+    if (note) {
+      note.textContent =
+        'Reads only \u2014 this app never writes to the device. It speaks AWJ on TCP 10606 directly.';
+    }
+  }
+
   const saved = localStorage.getItem(IP_KEY);
   if (saved) {
     els.ip.value = saved;
-  } else {
+  } else if (!isDesktop()) {
     try {
       const res = await fetch('./api/config');
       if (res.ok) {

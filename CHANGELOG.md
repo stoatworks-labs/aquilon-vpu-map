@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.1.0 — 2026-08-21
+
+**A desktop app.** Double-click, no Node, no Docker, no checkout — which is what
+a tech on a show actually needs.
+
+It is the same UI. The only difference is how it reaches the switcher: on the
+desktop, Rust makes the AWJ connection and returns the identical shape the Node
+bridge's `/api/vpu` returns, so `public/app.js` renders either without a branch
+anywhere in the rendering.
+
+- macOS (Apple silicon and Intel), Windows and Linux, built in CI.
+- ~2 MB on macOS: Tauri uses the system WebView rather than bundling a browser.
+- Reads only, and now tested as such — `only_ever_sends_get` asserts that every
+  frame this app can put on the wire carries `op: "get"`.
+- Verified against a real Aquilon C: reads identity, screen names and the full
+  mixer table, matching the server build exactly.
+
+### Not signed yet
+
+The macOS build is **unsigned**. Gatekeeper refuses an unsigned app downloaded
+from the internet with a message that reads like the file is damaged rather than
+a permission prompt. Right-click → Open, once, to get past it. Signing goes
+through the fleet's Apple path when that is wired up here.
+
+### Also
+
+- The Node server, the container and the Unraid template are unchanged and still
+  work. The desktop app does not replace them; it is the third way in.
+
 ## 1.0.0 — 2026-08-21
 
 First release. Reads an Analog Way LivePremier's VPU mixer allocation and draws it,

@@ -63,6 +63,19 @@ one would change.
 
 ## Using it
 
+**The desktop app** is the easiest way in — double-click, nothing installed.
+Grab it from [Releases](https://github.com/stoatworks-labs/aquilon-vpu-map/releases):
+macOS, Windows or Linux, about 2 MB because it uses the system WebView rather
+than bundling a browser.
+
+> The macOS build is **not signed yet**, so Gatekeeper refuses it on first open
+> with a message that reads like the file is damaged. Right-click → Open, once.
+
+Same UI as the server build; the difference is only how it reaches the switcher.
+On the desktop, Rust makes the AWJ connection directly.
+
+### Or run the server
+
 ```bash
 npm start
 ```

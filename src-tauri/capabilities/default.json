@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Only what the app needs: its own window, and opening links in the user's browser.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:allow-open-url"
+  ]
+}
