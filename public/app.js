@@ -440,19 +440,33 @@ function renderBudget(sum, colours) {
   );
 }
 
-function renderDiff(changes) {
+function renderDiff(changes, mixers, colours) {
   if (!changes.length) {
     els.diffSection.hidden = true;
     return;
   }
   els.diffSection.hidden = false;
   els.diff.replaceChildren(
-    ...changes.map((c) =>
-      el(
+    ...changes.map((c) => {
+      const rec = (mixers || {})[c.mixer] || {};
+      const colour = colours.get(rec.usedInScreen) || '';
+      const links = c.changed.filter((d) => d.prop.startsWith('link ')).length;
+      const props = c.changed.length - links;
+      const cost = [
+        links ? `${links} link${links === 1 ? '' : 's'}` : null,
+        props ? `${props} prop${props === 1 ? '' : 's'}` : null,
+      ].filter(Boolean).join(' · ');
+
+      return el(
         'div',
-        { class: 'row' },
+        { class: `row ${colour}` },
         el('span', { class: 'name', text: c.mixer.replace(/^PROC_(\d+)_MIXER_(\d+)$/, 'P$1·$2') }),
-        el('span', { class: 'kind', text: 'changed' }),
+        el('span', {
+          class: 'kind',
+          text: rec.usedInScreen
+            ? `${rec.usedInScreen} ${rec.usedInLayer === 'NATIVE' ? 'native' : `layer ${rec.usedInLayer}`}`
+            : 'not in use',
+        }),
         el(
           'span',
           { class: 'slices' },
@@ -461,9 +475,9 @@ function renderDiff(changes) {
             text: c.changed.map((d) => `${d.prop}: ${d.from} → ${d.to}`).join('   '),
           }),
         ),
-        el('span', { class: 'cost', text: `${c.changed.length} prop${c.changed.length === 1 ? '' : 's'}` }),
-      ),
-    ),
+        el('span', { class: 'cost', text: cost }),
+      );
+    }),
   );
 }
 
@@ -509,7 +523,7 @@ function render(payload) {
   renderChassis(current, colours, changedIds);
   renderGrids(current, colours);
   renderBudget(sum, colours);
-  renderDiff(changes);
+  renderDiff(changes, current, colours);
   renderDetail(current);
 
   els.results.hidden = false;

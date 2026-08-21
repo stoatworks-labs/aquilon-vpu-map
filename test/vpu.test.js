@@ -69,8 +69,27 @@ test('all eight output pipes are read, and NONE is not a pipe', () => {
   for (const a of s.allocations) assert.equal(a.pipes.length, 2, `${a.screen} ${a.layer}`);
 });
 
-test('diff is empty when running and staged match, and finds a real change', () => {
-  assert.deepEqual(diff(snapshot.current, snapshot.new), []);
+test('diff catches a staged change that is only in the output links', () => {
+  // The captured device has a real pending re-allocation: the running map puts
+  // screen output 2 on link 3, the staged one moves it to link 2. Nothing else
+  // differs — no property changes at all — so comparing only @props reports
+  // "no staged changes", which is exactly the bug this guards.
+  const changes = diff(snapshot.current, snapshot.new);
+  assert.equal(changes.length, 28, 'every enabled mixer moves');
+
+  const first = changes.find((c) => c.mixer === 'PROC_1_MIXER_1');
+  assert.deepEqual(first.changed, [
+    { prop: 'link 2', from: '\u2014', to: '2' },
+    { prop: 'link 3', from: '2', to: '\u2014' },
+  ]);
+
+  // No mixer changes a property; the whole difference is link allocation.
+  const props = changes.flatMap((c) => c.changed).filter((d) => !d.prop.startsWith('link '));
+  assert.deepEqual(props, [], 'the staged change is links only');
+});
+
+test('diff is empty when the two mappings match, and finds property changes', () => {
+  assert.deepEqual(diff(snapshot.current, snapshot.current), []);
 
   const staged = structuredClone(snapshot.current);
   staged.PROC_1_MIXER_1.usedInScreen = 'S7';

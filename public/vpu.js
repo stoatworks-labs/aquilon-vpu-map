@@ -355,7 +355,15 @@ export function deriveLinkGrid(mixers) {
   return out;
 }
 
-/** Which mixers differ between the running mapping and the staged one. */
+/**
+ * Which mixers differ between the running mapping and the staged one.
+ *
+ * The output links matter as much as the properties — a staged configuration
+ * can move a layer onto different links while every other value stays put, and
+ * comparing only `@props` reports that as no change at all. On the captured
+ * Aquilon C the running map interleaves S1 across links 1 and 3 while the
+ * staged one packs it onto 1 and 2, and nothing else differs.
+ */
 export function diff(current, next) {
   const out = [];
   for (const id of MIXER_IDS) {
@@ -363,11 +371,25 @@ export function diff(current, next) {
     const b = (next || {})[id];
     if (!a && !b) continue;
     const changed = [];
+
     for (const p of ['isAvailable', ...MIXER_PROPS]) {
       const av = a ? a[p] : undefined;
       const bv = b ? b[p] : undefined;
       if (av !== bv) changed.push({ prop: p, from: av, to: bv });
     }
+
+    const pipeOf = (rec, k) => {
+      const v = rec && rec.mixerAllocation ? rec.mixerAllocation[`usedOnOutPipe${k}`] : undefined;
+      return v === 'NONE' ? undefined : v;
+    };
+    for (let k = 1; k <= OUT_PIPES; k++) {
+      const av = pipeOf(a, k);
+      const bv = pipeOf(b, k);
+      if (av !== bv) {
+        changed.push({ prop: `link ${k}`, from: av ?? '—', to: bv ?? '—' });
+      }
+    }
+
     if (changed.length) out.push({ mixer: id, changed });
   }
   return out;

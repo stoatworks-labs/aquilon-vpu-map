@@ -39,6 +39,12 @@ device reports that allocation read-only over AWJ. This app reads it and draws i
 - **`public/vpu.js` must stay pure.** No Node APIs, no DOM. Both the browser and the
   server import it, so a live read and a recorded capture reach the screen through
   identical code. Device I/O belongs in `lib/read.js`.
+- **`diff()` must compare `mixerAllocation`, not just `@props`.** A staged
+  configuration can differ *only* in which output links it uses — on the captured
+  Aquilon C that is exactly what it does, moving output 2 from link 3 to link 2 across
+  28 mixers while every property stays identical. Comparing properties alone reported
+  "staged config matches running", which was wrong and looked right. Caught by running
+  the profiler against hardware, not by any test.
 - **`[hidden]` needs restating in author CSS.** `styles.css` sets `display:flex` on
   `section` and `main`; author rules beat the UA stylesheet's `[hidden]{display:none}`
   regardless of specificity, so without the explicit `[hidden]{display:none!important}`
@@ -121,7 +127,13 @@ leaf-read-only limitation entirely.
 - **Combined VPUs** (§5.5.5, a screen over more than 8 outputs) and **Optimized mode**
   (§5.5.6, which removes the 4-link boundary and would make the view's boundary line
   wrong for that VPU). Neither has been seen; neither is handled.
-- Nothing has been tested on a **Link** setup, so devices 2–4 are untried.
+- Nothing has been tested on a **Link** setup, so devices 2–4 are untried. Note they
+  are not absent from the protocol — they answer every path with `isAvailable:false`,
+  so "does device 2 exist" has to be asked as "does it have any mixer fitted".
+- **`channel` is assumed to index the Link device.** It reads 0 on every mixer of a
+  standalone chassis, and `DEVICE` is an enum of 1–4 (master + 3 followers), so that is
+  the obvious reading — but it is an assumption, not a finding. `scripts/profile-vpu.mjs`
+  exists partly to collect a Link profile that would settle it.
 - One **transient `EHOSTUNREACH`** was seen mid-session on an otherwise healthy link
   (ICMP fine, three retries immediately after all succeeded). Cause unknown — possibly
   the AWJ 5-client cap. The app surfaces it and re-enables the button; worth watching

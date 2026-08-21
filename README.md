@@ -138,7 +138,9 @@ DeviceObject/preconfig/resources/{current|new}/status/mapping
     /@props/usedInLayer                       NATIVE, then 1..256
     /@props/slice                             0..8
     /@props/capability                        OFF DUAL 4K 3 5K 5 6 7 8K
-    /@props/{channel,seamlessCapa}
+    /@props/channel                           0 on every mixer seen so far;
+                                              assumed to index the Link device
+    /@props/seamlessCapa
     /@props/cutnfillCapa                      OFF, or the capability it doubles
     /mixerAllocation/@props/usedOnOutPipe{1-8} which output link, NONE..64
     /$scaler/@items/{A,B}/@props/{memoryFill,memoryCut}  SM1..SM8
@@ -146,6 +148,32 @@ DeviceObject/preconfig/resources/{current|new}/status/mapping
 
 AWJ cannot enumerate: every container read returns `{}`. See [AGENTS.md](AGENTS.md) for
 where the model came from and how to recover the rest of it.
+
+## Profiling your own device
+
+If you have a LivePremier, a profile of how *your* box has allocated its VPU mixers is
+genuinely useful — the model here was built from one Aquilon C, and every configuration
+that differs from it teaches something.
+
+```bash
+node scripts/profile-vpu.mjs 192.168.1.50 --note "Aquilon RS4, 3 screens"
+```
+
+One file, no dependencies, Node 18+. **It only reads.** There is a single line in it
+that sends anything to the device and it is hard-coded to AWJ's `get` verb; the script
+says so at the top and invites you to check. It takes about five seconds and is safe on
+a live system, though you may as well run it between shows.
+
+It writes `vpu-profile-<model>-<timestamp>.json` and prints a summary. The file records
+structure only — screens appear as `S1`..`S24` and mixers as `PROC_n_MIXER_n`. **No
+addresses, serial numbers, device names, screen names or labels**, so there is nothing
+in it that identifies you, your client or your show. Read it, then attach it to an
+issue if you are happy to share.
+
+Most valuable are configurations unlike the one already recorded: mixed capabilities
+(`DUAL`, `8K`), **Link** setups with more than one device, Cut & Fill, Optimized mode,
+or a screen spread over more than 8 outputs. The script tells you which of these your
+box shows.
 
 ## Probing hardware
 
