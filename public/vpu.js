@@ -150,18 +150,27 @@ export function summarise(mixers) {
 export const LINKS_PER_VPU = 8;
 export const SCALING_ENGINE_BOUNDARY = 4; // output links, §5.5.4
 
-/** How many links square one layer of a given capability occupies. */
+/**
+ * How many links square one layer of a given capability occupies.
+ *
+ * The device's own LAYER_CAPABILITIES enum is `OFF, DUAL, 4K, 3, 5K, 5, 6, 7,
+ * 8K` — and read as a list, its *position* is the capacity: the plain numeric
+ * entries sit at exactly their own index (`3` third, `5` fifth, and so on), so
+ * the named ones are the capacities that got names. DUAL is 1, 4K is 2, 5K is
+ * 4, 8K is 8. The manual only discusses capacities 1, 2 and 4 (§5.5.3).
+ *
+ * This was originally hard-coded with `8K` at 4 and no entry for `5K` at all,
+ * which a chassis reporting `5K` showed up as wrong.
+ *
+ * Note this only sizes blocks in the DERIVED fallback layout — where the device
+ * reports its output links, block position comes from those instead.
+ */
 export function capacityToLinks(capability) {
-  switch (capability) {
-    case 'OFF': return 0;
-    case 'DUAL': return 1;   // capacity 1
-    case '4K': return 2;     // capacity 2
-    case '8K': return 4;     // capacity 4
-    default: {
-      const n = Number(capability);
-      return Number.isFinite(n) && n > 0 ? Math.min(4, n) : 2;
-    }
-  }
+  if (capability === 'OFF' || capability === undefined || capability === null) return 0;
+  const i = LAYER_CAPABILITIES.indexOf(String(capability));
+  if (i > 0) return i;
+  const n = Number(capability);
+  return Number.isFinite(n) && n > 0 ? n : 2;
 }
 
 /** The output-pipe slots a mixer drives, 0-based, as reported by the device. */
@@ -219,13 +228,15 @@ export function buildLinkGrid(mixers) {
           screen: m.usedInScreen,
           layer: m.usedInLayer,
           capability: m.capability,
-          cols: reportedColumns(m),
           cells: [],
         });
       }
-      runs[index.get(key)].cells.push({ id, slice: m.slice, rec: m });
+      // Columns are per MIXER, not per run: a layer spread over more than four
+      // output links uses a second mixer on a different set of links (§5.5.4),
+      // and the two report different pipes.
+      runs[index.get(key)].cells.push({ id, slice: m.slice, cols: reportedColumns(m), rec: m });
     }
-    for (const r of runs) r.cells.sort((a, b) => a.slice - b.slice);
+    for (const r of runs) r.cells.sort((a, b) => a.slice - b.slice || a.id.localeCompare(b.id));
 
     const taken = new Set();
     const key = (r, c) => `${r},${c}`;
@@ -233,13 +244,18 @@ export function buildLinkGrid(mixers) {
     let rowsUsed = 0;
 
     for (const run of runs) {
-      const height = run.cells.length;
-      const cols = run.cols.length ? run.cols : [0];
+      // One row per distinct slice. Several mixers can share a slice — that is
+      // the same strip of picture carried over different output links — and
+      // they sit on the same row because their columns do not overlap.
+      const slices = [...new Set(run.cells.map((c) => c.slice))].sort((a, b) => a - b);
+      const rowOf = new Map(slices.map((s, i) => [s, i]));
+      const height = slices.length;
+      const allCols = [...new Set(run.cells.flatMap((c) => (c.cols.length ? c.cols : [0])))];
 
-      // First row where this run's columns are free for its full height.
+      // First offset where every column this run touches is free for its height.
       let start = 0;
       while (start + height <= LINKS_PER_VPU) {
-        const clash = cols.some((c) => {
+        const clash = allCols.some((c) => {
           for (let r = start; r < start + height; r++) if (taken.has(key(r, c))) return true;
           return false;
         });
@@ -247,14 +263,15 @@ export function buildLinkGrid(mixers) {
         start++;
       }
 
-      run.cells.forEach((cell, i) => {
-        const row = start + i;
+      for (const cell of run.cells) {
+        const cols = cell.cols.length ? cell.cols : [0];
+        const row = start + rowOf.get(cell.slice);
         for (const c of cols) taken.add(key(row, c));
         blocks.push({
           mixer: cell.id,
           screen: run.screen,
           layer: run.layer,
-          capability: run.capability,
+          capability: cell.rec.capability,
           cutnfill: cell.rec.cutnfillCapa,
           slice: cell.slice,
           row,
@@ -265,7 +282,7 @@ export function buildLinkGrid(mixers) {
             cols.some((c) => c < SCALING_ENGINE_BOUNDARY) &&
             cols.some((c) => c >= SCALING_ENGINE_BOUNDARY),
         });
-      });
+      }
       rowsUsed = Math.max(rowsUsed, start + height);
     }
 

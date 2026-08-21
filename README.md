@@ -2,10 +2,11 @@
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
 > (Anthropic), directed and reviewed by a human author. **It has read a real Aquilon C
-> end to end** — 32 of 64 mixers fitted, 28 in use, in about 750 ms — and the recorded
-> capture, the tests and the screenshots all come from that device. Still untested:
-> **Link** setups (devices 2–4), capabilities other than `4K`, combined VPUs, Optimized
-> mode and Cut & Fill, none of which that chassis uses.
+> end to end**, in two different configurations — the captures, the tests and the
+> screenshots all come from that device, and the second configuration corrected two
+> things the first had made look settled. Still untested: **Link** setups (devices
+> 2–4), capacities other than `4K` and `5K`, combined VPUs, Optimized mode and Cut &
+> Fill.
 
 See how an Analog Way **LivePremier** allocates its VPU mixers across screens, layers
 and slices.
@@ -99,14 +100,21 @@ could be changed by accident.
 
 If you want to be sure, `lib/awj.js` has no code path that emits `replace`.
 
-## The recorded capture
+## The recorded captures
 
-`data/aquilon-c-snapshot.json` is a real read from a real Aquilon C — 32 of 64 mixers
-fitted, 28 in use across four screens. **Load recorded capture** shows it, which is
-useful for seeing what the tool does without a device in front of you, and it is what
-the test suite asserts against.
+Two real reads from the same Aquilon C, deliberately different:
 
-The host it came from is redacted; nothing else is edited.
+- `data/aquilon-c-snapshot.json` — four screens, one layer each, every mixer `4K`,
+  with one eight-slice background. **Load recorded capture** shows this one.
+- `data/aquilon-c-6output-5k.json` — the same chassis reconfigured: S1 a **six-output**
+  screen with native plus two layers, and S2 a **5K** layer.
+
+The tests run against both, because the first alone supports assumptions the second
+disproves — most importantly that a slice identifies one mixer. It does not: a layer
+spread over more than four output links is carried by a second mixer on different
+links, so a six-output screen reads as slices `[0,0,1,1]`.
+
+The host each came from is redacted; nothing else is edited.
 
 ## Supported devices
 

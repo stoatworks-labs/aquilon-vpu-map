@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import {
   buildLinkGrid,
   deriveLinkGrid,
+  reportedColumns,
   capacityToLinks,
   LINKS_PER_VPU,
   SCALING_ENGINE_BOUNDARY,
@@ -20,11 +21,16 @@ const snapshot = JSON.parse(
   fs.readFileSync(path.join(HERE, '..', 'data', 'aquilon-c-snapshot.json'), 'utf8'),
 );
 
-test('capacity maps to block size in links (manual 5.5.1)', () => {
-  assert.equal(capacityToLinks('DUAL'), 1, 'capacity 1 is one link square');
-  assert.equal(capacityToLinks('4K'), 2, 'capacity 2 is 2x2 links');
-  assert.equal(capacityToLinks('8K'), 4, 'capacity 4 is 4x4 links');
+test('capacity comes from the position in the device’s own enum', () => {
+  // LAYER_CAPABILITIES is OFF, DUAL, 4K, 3, 5K, 5, 6, 7, 8K — the bare numbers
+  // sit at their own index, so position is the capacity and the named entries
+  // are simply the capacities that got names.
+  assert.equal(capacityToLinks('DUAL'), 1, 'capacity 1');
+  assert.equal(capacityToLinks('4K'), 2, 'capacity 2');
+  assert.equal(capacityToLinks('5K'), 4, 'capacity 4 — seen on hardware');
+  assert.equal(capacityToLinks('8K'), 8, 'capacity 8');
   assert.equal(capacityToLinks('OFF'), 0);
+  assert.equal(capacityToLinks(undefined), 0);
 });
 
 test('a full VPU of capacity-2 layers is 16 blocks of 2x2 links', () => {
@@ -174,4 +180,81 @@ test('falls back to the derived layout when no pipes are reported', () => {
   const grid = buildLinkGrid(stripped);
   assert.ok(grid.every((g) => g.placement === 'derived'));
   assert.equal(grid.find((g) => g.vpu === 1).blocks.length, 16);
+});
+
+
+/* ---------- second real configuration: 6-output screen + a 5K layer ---------- */
+
+const sixOut = JSON.parse(
+  fs.readFileSync(path.join(HERE, '..', 'data', 'aquilon-c-6output-5k.json'), 'utf8'),
+);
+
+test('a run can have several mixers per slice, on different links', () => {
+  // S1 here is a SIX-output screen. Manual 5.5.4: a layer spread over more than
+  // four output links uses another layer link — so each slice is carried by two
+  // mixers, one on links 1,3,5,7 (outputs 1-4) and one on links 2,4 (outputs
+  // 5,6). Slice therefore does NOT uniquely identify a mixer within a run, and
+  // columns are per mixer rather than per run.
+  const enabled = Object.entries(sixOut.current).filter(([, m]) => m.isEnabled);
+  const s1native = enabled.filter(([, m]) => m.usedInScreen === 'S1' && m.usedInLayer === 'NATIVE');
+
+  assert.equal(s1native.length, 4, 'four mixers');
+  assert.deepEqual(s1native.map(([, m]) => m.slice).sort(), [0, 0, 1, 1], 'two per slice');
+
+  const colsBySlice = new Map();
+  for (const [, m] of s1native) {
+    const cols = reportedColumns(m).map((c) => c + 1);
+    if (!colsBySlice.has(m.slice)) colsBySlice.set(m.slice, []);
+    colsBySlice.get(m.slice).push(cols);
+  }
+  for (const [slice, sets] of colsBySlice) {
+    assert.equal(sets.length, 2, `slice ${slice} carried by two mixers`);
+    const flat = sets.flat();
+    assert.equal(new Set(flat).size, flat.length, 'their links do not overlap');
+    assert.equal(flat.length, 6, 'six output links between them');
+  }
+});
+
+test('mixers sharing a slice share a row; layers of one screen stack', () => {
+  const p1 = buildLinkGrid(sixOut.current).find((g) => g.vpu === 1);
+  assert.equal(p1.placement, 'reported-columns');
+
+  const rowsOf = (screen, layer) => {
+    const rs = p1.blocks.filter((b) => b.screen === screen && b.layer === layer).map((b) => b.row);
+    return [...new Set(rs)].sort((a, b) => a - b);
+  };
+
+  // Two slices, so two rows — not four, despite four mixers.
+  assert.deepEqual(rowsOf('S1', 'NATIVE'), [0, 1]);
+  // Native, layer 1 and layer 2 all want the same links, so they stack.
+  assert.deepEqual(rowsOf('S1', '1'), [2, 3]);
+  assert.deepEqual(rowsOf('S1', '2'), [4, 5]);
+  // S2's 5K layer is on links 6 and 8, which nothing else touches, so it starts
+  // at row 0 alongside S1 rather than below it.
+  assert.deepEqual(rowsOf('S2', 'NATIVE'), [0, 1, 2, 3]);
+
+  assert.equal(p1.rowsUsed, 6, 'six of eight layer links used');
+  assert.equal(p1.overflow, false);
+});
+
+test('both real captures pack without collisions', () => {
+  for (const snap of [snapshot, sixOut]) {
+    for (const g of buildLinkGrid(snap.current)) {
+      const taken = new Set();
+      for (const b of g.blocks) {
+        for (const c of b.cols) {
+          const k = `${b.row},${c}`;
+          assert.ok(!taken.has(k), `VPU ${g.vpu}: ${b.mixer} collides at ${k}`);
+          taken.add(k);
+        }
+      }
+      assert.equal(g.overflow, false);
+    }
+  }
+});
+
+test('a mixed-capability chassis keeps each mixer’s own capability', () => {
+  const p1 = buildLinkGrid(sixOut.current).find((g) => g.vpu === 1);
+  const caps = new Set(p1.blocks.map((b) => b.capability));
+  assert.deepEqual([...caps].sort(), ['4K', '5K'], 'both appear, per mixer');
 });

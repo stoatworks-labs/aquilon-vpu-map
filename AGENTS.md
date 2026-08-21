@@ -63,6 +63,14 @@ in a (screen, layer) run shares the same set.
 rather than packing each mixer into a contiguous square — which is what the first,
 purely derived version did, and it was wrong in a way that looked plausible.
 
+**Slice does NOT uniquely identify a mixer within a run.** A layer spread over more
+than four output links is carried by a *second* mixer on a different set of links
+(§5.5.4) — the same slice, different pipes. A six-output screen shows as slices
+`[0,0,1,1]`: two mixers per slice, one on links 1,3,5,7 (outputs 1-4) and one on links
+2,4 (outputs 5,6). So **columns are per mixer, never per run**, and rows come from the
+run's distinct slices rather than its mixer count. Mixers sharing a slice share a row,
+because their links do not overlap.
+
 **Rows: not reported.** Nothing names the layer link. Two layers of one screen share
 both their output links and their slice numbers (S4's native and its layer 1 are
 identical on both), so slice cannot separate them, and `channel` reads 0 everywhere.
@@ -122,8 +130,11 @@ leaf-read-only limitation entirely.
 **Not verified:**
 
 - **Which layer link (row) anything sits on.** Columns are the device's; rows are packed.
-- Mixed capabilities. Every mixer on the captured box was `4K` (capacity 2), so the
-  1×1 and 4×4 block paths in `deriveLinkGrid()` have only ever run in tests.
+- Capacities other than `4K` and `5K`. `capacityToLinks()` now reads the position in
+  the device's own `LAYER_CAPABILITIES` enum (`OFF, DUAL, 4K, 3, 5K, 5, 6, 7, 8K`),
+  where the bare numbers sit at their own index — so DUAL is 1, 4K is 2, 5K is 4, 8K
+  is 8. It was previously hard-coded with 8K at 4 and no entry for 5K at all, which a
+  chassis reporting `5K` exposed. `DUAL` and `8K` themselves are still unseen.
 - **Combined VPUs** (§5.5.5, a screen over more than 8 outputs) and **Optimized mode**
   (§5.5.6, which removes the 4-link boundary and would make the view's boundary line
   wrong for that VPU). Neither has been seen; neither is handled.
@@ -151,6 +162,15 @@ transport work, but it exposes **no `$vpuMixer` collection**. The path resolves 
 `$device/@items/1` and then answers `E12`. It has no processor boards to map.
 
 Reproduce with `{"op":"get","path":"…/$device/@items/1/$vpuMixer"}` + `0x04`.
+
+## Two real captures, deliberately different
+
+`data/aquilon-c-snapshot.json` — four screens, one layer each, every mixer `4K`, one
+eight-slice background. `data/aquilon-c-6output-5k.json` — the same chassis
+reconfigured: **S1 is a six-output screen** with native plus two layers (two mixers per
+slice), and **S2 is `5K`**. The tests run against both, because the first one alone
+supports assumptions the second disproves. If a third configuration turns up, add it
+rather than editing either.
 
 ## Layout
 

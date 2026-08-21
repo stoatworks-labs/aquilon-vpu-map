@@ -5,10 +5,16 @@
 // Answered 2026-08-21 on an Aquilon C: COLUMNS yes (mixerAllocation.usedOnOutPipe1..8),
 // ROWS no. Re-run it on new firmware, a Link setup, or a busier chassis.
 //
-// READS ONLY. Two HTTP GETs and a set of AWJ `get`s. Nothing is written to the
-// device — no `replace`, no Subscriptions, no HTTP verb other than GET.
+// READS ONLY. Nothing is written to the device — no `replace`, no Subscriptions,
+// no HTTP verb other than GET.
 //
-//   node scripts/probe-hardware.mjs 192.168.2.140 [--out probe-out]
+// ⚠️ The `/api/stores/device` pull is ~124 MB and is now OPT-IN behind --store.
+// It is the one heavy thing here: a pipe closed early partway through a response
+// that size can leave the device half-cued, which reads later as a protocol bug.
+// If you do use it, let it run to completion — do not Ctrl-C it, and never pipe
+// it through anything that closes early (`head`, `less`).
+//
+//   node scripts/probe-hardware.mjs 192.168.2.140 [--out probe-out] [--store]
 //
 // Leaves a directory of artefacts behind; attach it to the session and the
 // analysis can be done offline.
@@ -25,10 +31,14 @@ const outIdx = process.argv.indexOf('--out');
 const OUT = outIdx > -1 ? process.argv[outIdx + 1] : 'probe-out';
 
 if (!arg || arg.startsWith('--')) {
-  console.error('usage: node scripts/probe-hardware.mjs <ip>[:httpPort] [--out dir]');
+  console.error('usage: node scripts/probe-hardware.mjs <ip>[:httpPort] [--out dir] [--store]');
   console.error('  a real device serves HTTP on 80; the simulator uses 3000');
+  console.error('  --store  also pull /api/stores/device (~124 MB). Heavy: let it finish.');
   process.exit(2);
 }
+
+// The full-store pull is opt-in. Everything else is small, targeted reads.
+const wantStore = process.argv.includes('--store');
 
 // AWJ is always 10606; only the HTTP port varies (80 on hardware, 3000 on the sim).
 const [host, httpPortRaw] = arg.split(':');
@@ -46,16 +56,21 @@ const save = async (name, data) => {
 await fs.mkdir(OUT, { recursive: true });
 
 /* ------------------------------------------------------------------ */
-/* STEP 1 — the whole device store over HTTP.                          */
-/* This is the highest-value probe: it contains the entire resources    */
-/* subtree in one response, so nothing has to be guessed path by path.  */
-/* On the simulator the full store is ~124 MB, of which resources is    */
-/* ~3 MB, so we stream it and keep only the part we need.               */
+/* STEP 1 — the whole device store over HTTP.  OPT-IN, see --store.     */
+/*                                                                      */
+/* It is the richest single artefact — the entire resources subtree in   */
+/* one response, so nothing has to be guessed path by path, and it is    */
+/* how the eight-pipe mixerAllocation was found. It is also ~124 MB and  */
+/* the only heavy thing this script can do, so it no longer runs by      */
+/* default. Steps 2-5 answer the usual questions on their own.           */
 /* ------------------------------------------------------------------ */
 
-log(`\n[1/5] GET ${httpBase}/api/stores/device  (large — streaming)`);
+log(`\n[1/5] GET ${httpBase}/api/stores/device`);
 let store = null;
-try {
+if (!wantStore) {
+  log('    skipped — pass --store to include it (~124 MB, see the header note).');
+  log('    Steps 2-5 do not need it.');
+} else try {
   const res = await fetch(`${httpBase}/api/stores/device`, {
     headers: { accept: 'application/json' },
   });
@@ -73,7 +88,7 @@ try {
   }
 } catch (err) {
   log(`    ✗ failed: ${err.message}`);
-  log('      (if this fails, steps 2-4 still stand on their own)');
+  log('      (if this fails, steps 2-5 still stand on their own)');
 }
 
 /* What sits alongside vpuMixerList? The answer differs by implementation:
@@ -215,8 +230,14 @@ try {
       slice: await client.tryGet(`${b}/@props/slice`),
       capability: await client.tryGet(`${b}/@props/capability`),
       seamlessCapa: await client.tryGet(`${b}/@props/seamlessCapa`),
-      pipe1: await client.tryGet(`${b}/mixerAllocation/@props/usedOnOutPipe1`),
-      pipe2: await client.tryGet(`${b}/mixerAllocation/@props/usedOnOutPipe2`),
+      pipes: await (async () => {
+        const out = {};
+        for (let k = 1; k <= 8; k++) {
+          const v = await client.tryGet(`${b}/mixerAllocation/@props/usedOnOutPipe${k}`);
+          if (v !== undefined && v !== 'NONE') out[k] = v;
+        }
+        return out;
+      })(),
     };
   }
   await save('mixers.json', mixers);
@@ -228,7 +249,16 @@ try {
   log(`    distinct channel values : ${JSON.stringify(uniq('channel'))}`);
   log(`    distinct slice values   : ${JSON.stringify(uniq('slice'))}`);
   log(`    distinct capability     : ${JSON.stringify(uniq('capability'))}`);
-  log(`    distinct pipe1 / pipe2  : ${JSON.stringify(uniq('pipe1'))} / ${JSON.stringify(uniq('pipe2'))}`);
+  const linkSets = [...new Set(en.map((m) => JSON.stringify(Object.keys(m.pipes).map(Number))))];
+  log(`    distinct output-link sets: ${linkSets.join('  ')}`);
+  const perSlice = new Map();
+  for (const m of en) {
+    const k = `${m.usedInScreen} ${m.usedInLayer} slice ${m.slice}`;
+    perSlice.set(k, (perSlice.get(k) || 0) + 1);
+  }
+  const shared = [...perSlice.values()].filter((n) => n > 1).length;
+  log(`    slices carried by >1 mixer: ${shared}` +
+      (shared ? '  (a layer over more than 4 output links)' : ''));
 
   /* ---------------------------------------------------------------- */
   /* STEP 5 — THE ONE THAT MATTERS.                                    */

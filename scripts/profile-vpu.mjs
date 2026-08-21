@@ -71,8 +71,10 @@ LivePremier VPU profiler — reads only, never writes.
   --note   a line of context, e.g. "Aquilon RS4, 3 screens, one 8K layer".
            Helpful, entirely optional, and included verbatim in the output.
   --full   also fetch the device's whole configuration store over HTTP.
-           This is a LARGE download (~120 MB) — off by default. Only use it
-           on a quiet network, and only if asked for it.
+           A LARGE download (~120 MB), off by default. Only on a quiet network,
+           and only if asked for it. If you do run it, let it finish — a
+           transfer that size interrupted partway can leave the device in an
+           odd state. Ctrl-C during it is the one thing to avoid.
 `);
   process.exit(host ? 0 : 2);
 }
