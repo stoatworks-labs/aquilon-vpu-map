@@ -23,12 +23,18 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost"
+      "csp": "default-src 'self' tauri:; script-src 'self' tauri:; style-src 'self' tauri: 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' tauri: https://fonts.gstatic.com; img-src 'self' tauri: data:; connect-src 'self' tauri: ipc: http://ipc.localhost"
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg", "nsis", "deb", "rpm"],
+    "targets": [
+      "app",
+      "dmg",
+      "nsis",
+      "deb",
+      "rpm"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -38,6 +44,6 @@
     ],
     "category": "Utility",
     "shortDescription": "See how a LivePremier allocates its VPU mixers",
-    "longDescription": "Reads an Analog Way LivePremier's VPU mixer allocation over AWJ and draws it — what each screen is spending, what is left, and what a pending configuration would change. Reads only; it never writes to the switcher."
+    "longDescription": "Reads an Analog Way LivePremier's VPU mixer allocation over AWJ and draws it \u2014 what each screen is spending, what is left, and what a pending configuration would change. Reads only; it never writes to the switcher."
   }
 }
