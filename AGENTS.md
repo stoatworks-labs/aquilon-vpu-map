@@ -45,6 +45,14 @@ device reports that allocation read-only over AWJ. This app reads it and draws i
   28 mixers while every property stays identical. Comparing properties alone reported
   "staged config matches running", which was wrong and looked right. Caught by running
   the profiler against hardware, not by any test.
+- **Backgrounds do not use the VPU either, and `NATIVE` is not the background.**
+  Two different things, easily conflated. *Backgrounds* — background sets, stills,
+  per-screen assignment — live in `preconfig/backgrounds/`, an entirely separate
+  subtree from `preconfig/resources/`, and cost no mixer. `usedInLayer: 'NATIVE'` is
+  something else: the first entry of the `PRECONFIG_SCREEN_LAYER` enum ("Native",
+  then 1..256), a layer slot that demonstrably consumes mixers and is counted by
+  `layerCount` (S1 reads 3 for NATIVE + 1 + 2). Call it the **native layer**; calling
+  it a "background" in the UI was wrong and is exactly the confusion to avoid.
 - **Auxiliaries do not use the VPU.** Settled with the operator: there is no aux
   resource to count, and the object model agrees (`usedInScreen` draws on a S1–S24
   enum with no `A*` entries; `preconfig/resources` has no aux module). Auxes do have
@@ -179,7 +187,7 @@ Reproduce with `{"op":"get","path":"…/$device/@items/1/$vpuMixer"}` + `0x04`.
 ## Two real captures, deliberately different
 
 `data/aquilon-c-snapshot.json` — four screens, one layer each, every mixer `4K`, one
-eight-slice background. `data/aquilon-c-6output-5k.json` — the same chassis
+eight-slice native layer. `data/aquilon-c-6output-5k.json` — the same chassis
 reconfigured: **S1 is a six-output screen** with native plus two layers (two mixers per
 slice), and **S2 is `5K`**. The tests run against both, because the first one alone
 supports assumptions the second disproves. If a third configuration turns up, add it

@@ -54,7 +54,7 @@ A **VPU mixer** is the physical mixing and scaling resource the device allocates
 in total, though most chassis are part-populated.
 
 A layer too wide for a single mixer is split across several, each carrying one
-**slice**. That is why an eight-slice background can consume an entire processor board
+**slice**. That is why an eight-slice native layer can consume an entire processor board
 on its own, and why counting layers never tells you whether a configuration will fit.
 
 The device reports the map read-only, and keeps two copies of it: `current` (running)
@@ -101,6 +101,16 @@ last address you used is remembered in the browser.
 docker compose up -d
 ```
 
+Or straight from the registry, which is what the Unraid Community Applications
+template uses:
+
+```bash
+docker run -d --name aquilon-vpu-map -p 8531:8531 ghcr.io/stoatworks-labs/aquilon-vpu-map:latest
+```
+
+Bridge networking is enough — the app discovers nothing and only makes an outbound
+connection to the address you type.
+
 ## Why it needs a server
 
 AWJ is a raw TCP protocol on port **10606**. A browser tab cannot open a TCP socket, so
@@ -124,7 +134,7 @@ If you want to be sure, `lib/awj.js` has no code path that emits `replace`.
 Three real reads from the same Aquilon C, deliberately different:
 
 - `data/aquilon-c-snapshot.json` — four screens, one layer each, every mixer `4K`,
-  with one eight-slice background. **Load recorded capture** shows this one.
+  with one eight-slice native layer. **Load recorded capture** shows this one.
 - `data/aquilon-c-6output-5k.json` — the same chassis reconfigured: S1 a **six-output**
   screen with native plus two layers, and S2 a **5K** layer.
 - `data/aquilon-c-optimized.json` — S1 with three layers over three outputs,

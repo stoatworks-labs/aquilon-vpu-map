@@ -238,7 +238,7 @@ function renderChassis(mixers, colours, changedIds) {
   const legend = el(
     'div',
     { class: 'legend' },
-    el('span', { class: 'key' }, el('span', { class: 'swatch solid' }), 'Native background'),
+    el('span', { class: 'key' }, el('span', { class: 'swatch solid' }), 'Native layer'),
     el('span', { class: 'key' }, el('span', { class: 'swatch lay' }), 'Numbered layer'),
     el('span', { class: 'key' }, el('span', { class: 'swatch sp' }), 'Spare — available, not enabled'),
     el('span', { class: 'key' }, el('span', { class: 'swatch ab' }), 'Not fitted'),
