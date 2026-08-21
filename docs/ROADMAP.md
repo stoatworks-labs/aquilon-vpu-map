@@ -93,12 +93,53 @@ there is a test that fails if any capture grows a `screens` field.
 `docs/HARDWARE-PROBE.md` is the procedure for a device you have; the profiler is
 for devices you do not.
 
-## Deployment, still open
+## Getting it to a tech on a show
 
-It runs with `npm start`, and there is a Dockerfile that CI builds and smoke-tests
-on every push. Not yet done, and all needing a decision rather than work:
+Shipped in 1.0.0: `npm start`, and a container
+(`ghcr.io/stoatworks-labs/aquilon-vpu-map`) with an Unraid Community Applications
+template. **Neither is the answer for someone on site** — a tech cannot be assumed
+to have Docker, or Node, or a checkout.
 
-- an Unraid CA template and a `fleet.json` entry (port 8531 is unclaimed)
-- a website entry on `/software`
-- a hosted demo — which can only ever show the recorded captures, since a page
-  served over HTTPS cannot reach a device on a private address
+The options, and what the evidence says about each:
+
+### A desktop launcher — the one to build
+
+Bundle the server and open a browser at it. Double-click, nothing installed.
+This keeps the architecture exactly as it is, which matters: AWJ gives a
+complete read in ~700 ms of small targeted requests.
+
+Either a single Node executable (`node --experimental-sea-config`, no extra
+toolchain) or Tauri, which the fleet already uses elsewhere and which gives a
+real app bundle. Unsigned macOS binaries are refused by Gatekeeper, so this needs
+the fleet's existing signing path rather than a bare `.tar.gz`.
+
+### A Chrome extension — possible, but worse, and now measured
+
+Attractive because an extension on the Web RCS page runs on the device's **own
+origin**, so CORS and mixed content simply do not apply. But:
+
+- **An extension still cannot open a TCP socket**, so it cannot speak AWJ at all.
+- Its only same-origin route to the VPU map is `GET /api/stores/device` — the
+  whole device object, **~124 MB**. Probed 2026-08-21: `?path=`, `?filter=` and
+  every `/api/stores/device/<subpath>` variant are ignored or 404. There is no
+  narrower endpoint.
+- That is also the one transfer the fleet flags as risky to interrupt.
+
+So an extension could manage a one-shot view at 124 MB a refresh, and could not
+sensibly do *Keep watching* at all. Worth revisiting only if a future firmware
+adds a scoped read.
+
+### Direct Sockets / `TCPSocket` — checked, not a way out
+
+Chromium does implement it, but only inside an **Isolated Web App**: a signed web
+bundle, an `isolated-app://` origin, and Chrome started with
+`--enable-features=IsolatedWebApps,IsolatedWebAppDevMode` or enterprise policy —
+plus a WebRTC data channel to reach it from an ordinary page. That is a heavier
+install than the launcher, for the same result.
+
+### Still open
+
+- A website entry on `/software`.
+- A hosted demo, which can only ever show the recorded captures: a page served
+  over HTTPS cannot reach a device on a private address, and the device has 443
+  closed.
