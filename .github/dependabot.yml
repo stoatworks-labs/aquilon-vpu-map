@@ -7,7 +7,8 @@
 # Deliberately no `ignore:` rules — an ignore also suppresses the *security*
 # update for that dependency, which is exactly the PR worth having.
 #
-# No npm entry: this app has no dependencies and no build step.
+# The app itself still ships no dependencies. The one npm entry below covers
+# @tauri-apps/cli, which is a dev dependency used to build the desktop app.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -25,3 +26,23 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 3
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      npm-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "cargo"
+    directory: "/src-tauri"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      cargo-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

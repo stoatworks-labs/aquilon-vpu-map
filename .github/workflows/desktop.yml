@@ -67,6 +67,12 @@ jobs:
       # must exist before anything cargo does — including the tests. It is
       # generated, not committed, and tauri-action's own beforeBuildCommand runs
       # too late for this step.
+      # tauri-action drives the repo's own `tauri` npm script, so the CLI has to
+      # be installed. It is the only dependency this repo has, and it is a dev
+      # one — the app itself still ships nothing.
+      - name: Install the Tauri CLI
+        run: npm ci
+
       - name: Stage the frontend
         run: node scripts/stage-frontend.mjs
 
