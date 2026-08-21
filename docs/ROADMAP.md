@@ -35,15 +35,16 @@ Enough to use.
 | Combined VPUs (§5.5.5) not handled | A screen over more than 8 outputs spills into another VPU; never observed | A configuration with a 9+ output screen |
 | ~~Optimized mode not detected~~ | **Done.** `isOptimized` is reported per screen; the boundary is now suppressed on any VPU hosting one | — |
 | Cut & Fill effect on allocation unknown | `cutnfillCapa` is a *capability* and has read `OFF`/`4K`; what happens when the effect is actually enabled is unseen | A layer with Cut & Fill on |
-| ~~No aux screens~~ | **Not a gap.** Auxiliaries do not appear in the VPU map at all: the `SCREEN` enum behind `usedInScreen` is S1–S24 with no `A*` entries, and there is no aux module anywhere under `preconfig/resources`. They have labels, but no mixer ever reports serving one | — |
+| ~~No aux screens~~ | **Settled: auxiliaries do not use the VPU, so there is nothing to count.** Confirmed by the operator, and matching the object model — the `SCREEN` enum behind `usedInScreen` is S1–S24 with no `A*` entries, and `preconfig/resources` has no aux module | — |
 
 ## Done since this was written
 
-**Aux screens — turned out not to be a gap.** Worth stating because it looked
-like one: auxiliaries simply are not part of the VPU mixer map. The enum behind
-`usedInScreen` has no aux entries and `preconfig/resources` has no aux module,
-so there is nothing to show. They do have labels, which is what made it look
-like an omission.
+**Aux screens — settled, not a gap.** Auxiliaries **do not use the VPU**, so
+there is no resource of theirs to show. Confirmed by the operator, and the
+object model agrees: the enum behind `usedInScreen` is S1–S24 with no aux
+entries, and `preconfig/resources` has no aux module. They do have labels
+(`$auxiliary/@items/A1/control/@props/label`), which is the only reason this
+ever looked like an omission. Treat it as closed rather than unexplored.
 
 **Optimized mode — done, and it was making the view wrong.** `isOptimized` is
 reported per screen under `resources/{current|new}/$screen/@items/S<n>/status`.

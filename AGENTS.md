@@ -45,6 +45,11 @@ device reports that allocation read-only over AWJ. This app reads it and draws i
   28 mixers while every property stays identical. Comparing properties alone reported
   "staged config matches running", which was wrong and looked right. Caught by running
   the profiler against hardware, not by any test.
+- **Auxiliaries do not use the VPU.** Settled with the operator: there is no aux
+  resource to count, and the object model agrees (`usedInScreen` draws on a S1–S24
+  enum with no `A*` entries; `preconfig/resources` has no aux module). Auxes do have
+  labels, which is the only thing that makes their absence look like an oversight.
+  Do not add aux handling to the resource views.
 - **Screen names are show data.** `readScreenNames()` reads the operator's own
   labels (`$screen/@items/S<n>/control/@props/label` — note `$screen`, not
   `$screenAuxGroup`, whose `control` has no `label`). They make every view readable
