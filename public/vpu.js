@@ -24,9 +24,13 @@ export const MIXER_IDS = (() => {
 
 export const SCALERS = ['A', 'B'];
 
+/** Output pipes per mixer — one per output link. */
+export const OUT_PIPES = 8;
+
 /** Props read from each mixer. All are readOnly in the device's own model. */
 export const MIXER_PROPS = [
   'isEnabled',
+  'cutnfillCapa',
   'usedInScreen',
   'usedInLayer',
   'channel',
@@ -82,8 +86,9 @@ export function summarise(mixers) {
     g.mixers.push(id);
     g.slices.push(rec.slice);
     const a = rec.mixerAllocation || {};
-    for (const [name, v] of [['pipe1', a.usedOnOutPipe1], ['pipe2', a.usedOnOutPipe2]]) {
-      if (v !== undefined && v !== null && v !== 'NONE') g.pipes.add(`${name} ${v}`);
+    for (let k = 1; k <= OUT_PIPES; k++) {
+      const v = a[`usedOnOutPipe${k}`];
+      if (v !== undefined && v !== null && v !== 'NONE') g.pipes.add(`link ${k}\u2192out ${v}`);
     }
   }
 
@@ -122,18 +127,24 @@ export function summarise(mixers) {
  * that consumes a second layer link and wraps onto it.
  *
  * ---------------------------------------------------------------------------
- * IMPORTANT: this is a DERIVED layout, not reported placement.
+ * HOW MUCH OF THIS THE DEVICE ACTUALLY REPORTS — settled on hardware 2026-08-21.
  *
- * The device tells us what each mixer serves — screen, layer, slice, capability
- * — but not which row and column it sits in. `$vpuLayer` (8 scalers per VPU,
- * each declaring which of 8 output pipes it drives) looks like the reported
- * grid, but it reads empty on the simulator and has never been seen populated.
- * See docs/HARDWARE-PROBE.md. Until it is, blocks are placed by the rule below.
+ * COLUMNS ARE REPORTED. `mixerAllocation.usedOnOutPipe1..8` names exactly which
+ * output links a mixer drives. Every mixer in a (screen, layer) run shares the
+ * same set, and different runs sit on different links — on the captured Aquilon C,
+ * S1 on links 1 and 3, S3 on 2 and 4, S2 on 5 and 7. Note the interleaving: runs
+ * are NOT allocated contiguous links, so the grid must draw what is reported
+ * rather than forcing each mixer into a contiguous square.
  *
- * The rule: within a VPU, take each (screen, layer) run in order, sort its
- * mixers by slice, and lay them left to right in capacity-sized blocks. A run
- * longer than the scaling-engine boundary wraps onto the next layer link. Runs
- * stack downwards in the order the device lists them.
+ * ROWS ARE NOT. Nothing names the layer link. Two layers of one screen share both
+ * their output links and their slice numbers — S4's native and its layer 1 are
+ * identical on both counts — so slice cannot separate them. `channel` reads 0 on
+ * every mixer and is no help either. `buildLinkGrid` therefore packs rows.
+ *
+ * `$vpuLayer` — which looked like the reported grid, 8 scalers per VPU each
+ * declaring 8 output pipes — DOES NOT EXIST on hardware: it answers E12, along
+ * with `$pipe`. It is present but permanently empty on the simulator. The two
+ * implementations expose different collections; trust the hardware.
  * ------------------------------------------------------------------------ */
 
 export const LINKS_PER_VPU = 8;
@@ -153,8 +164,129 @@ export function capacityToLinks(capability) {
   }
 }
 
+/** The output-pipe slots a mixer drives, 0-based, as reported by the device. */
+export function reportedColumns(rec) {
+  const a = (rec && rec.mixerAllocation) || {};
+  const cols = [];
+  for (let k = 1; k <= OUT_PIPES; k++) {
+    const v = a[`usedOnOutPipe${k}`];
+    if (v !== undefined && v !== null && v !== 'NONE') cols.push(k - 1);
+  }
+  return cols;
+}
+
+/**
+ * Build the link grid, using the device's own output-pipe allocation for the
+ * columns and deriving only the rows.
+ *
+ * WHAT IS REPORTED: `mixerAllocation.usedOnOutPipe1..8` names exactly which
+ * output links a mixer drives, and every mixer in a (screen, layer) run shares
+ * the same set. So horizontal position is the device's, not ours.
+ *
+ * WHAT IS NOT: nothing identifies the layer link — the row. Two layers of one
+ * screen legitimately share both their pipes and their slice numbers (a screen's
+ * native and its layer 1 composite onto the same outputs), so slice alone cannot
+ * separate them. Rows are therefore assigned by packing: a run occupies one row
+ * per slice, starting at the first row where none of its columns are already
+ * taken. Runs on disjoint columns share rows; runs that collide stack.
+ *
+ * Falls back to `deriveLinkGrid` for data with no pipe allocation at all.
+ *
+ * @returns {{vpu, fitted, blocks, rowsUsed, overflow, spare, placement}[]}
+ */
+export function buildLinkGrid(mixers) {
+  const anyPipes = Object.values(mixers || {}).some(
+    (r) => r && r.isEnabled && reportedColumns(r).length,
+  );
+  if (!anyPipes) {
+    return deriveLinkGrid(mixers).map((g) => ({ ...g, placement: 'derived' }));
+  }
+
+  const out = [];
+  for (let p = 1; p <= PROCESSORS; p++) {
+    const ids = MIXER_IDS.filter((id) => parseMixerId(id).processor === p);
+    const fitted = ids.some((id) => mixers?.[id]?.isAvailable);
+    const enabled = ids.filter((id) => mixers?.[id]?.isEnabled);
+
+    const runs = [];
+    const index = new Map();
+    for (const id of enabled) {
+      const m = mixers[id];
+      const key = `${m.usedInScreen} ${m.usedInLayer}`;
+      if (!index.has(key)) {
+        index.set(key, runs.length);
+        runs.push({
+          screen: m.usedInScreen,
+          layer: m.usedInLayer,
+          capability: m.capability,
+          cols: reportedColumns(m),
+          cells: [],
+        });
+      }
+      runs[index.get(key)].cells.push({ id, slice: m.slice, rec: m });
+    }
+    for (const r of runs) r.cells.sort((a, b) => a.slice - b.slice);
+
+    const taken = new Set();
+    const key = (r, c) => `${r},${c}`;
+    const blocks = [];
+    let rowsUsed = 0;
+
+    for (const run of runs) {
+      const height = run.cells.length;
+      const cols = run.cols.length ? run.cols : [0];
+
+      // First row where this run's columns are free for its full height.
+      let start = 0;
+      while (start + height <= LINKS_PER_VPU) {
+        const clash = cols.some((c) => {
+          for (let r = start; r < start + height; r++) if (taken.has(key(r, c))) return true;
+          return false;
+        });
+        if (!clash) break;
+        start++;
+      }
+
+      run.cells.forEach((cell, i) => {
+        const row = start + i;
+        for (const c of cols) taken.add(key(row, c));
+        blocks.push({
+          mixer: cell.id,
+          screen: run.screen,
+          layer: run.layer,
+          capability: run.capability,
+          cutnfill: cell.rec.cutnfillCapa,
+          slice: cell.slice,
+          row,
+          cols,
+          size: 1,
+          crossesBoundary: cols.some((c) => c >= SCALING_ENGINE_BOUNDARY),
+          spansBoundary:
+            cols.some((c) => c < SCALING_ENGINE_BOUNDARY) &&
+            cols.some((c) => c >= SCALING_ENGINE_BOUNDARY),
+        });
+      });
+      rowsUsed = Math.max(rowsUsed, start + height);
+    }
+
+    out.push({
+      vpu: p,
+      fitted,
+      blocks,
+      rowsUsed,
+      overflow: rowsUsed > LINKS_PER_VPU,
+      spare: ids.filter((id) => mixers?.[id]?.isAvailable && !mixers[id].isEnabled).length,
+      placement: 'reported-columns',
+    });
+  }
+  return out;
+}
+
 /**
  * Lay the enabled mixers of every processor onto its 8x8 link field.
+ *
+ * Fallback for data with no output-pipe allocation — see buildLinkGrid, which
+ * uses the device's own columns when they are there.
  *
  * @returns {{vpu:number, fitted:boolean, blocks:Array, rowsUsed:number}[]}
  *   blocks are `{screen, layer, slice, capability, col, row, size, wrapped}`

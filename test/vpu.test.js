@@ -56,12 +56,17 @@ test('a layer costs a run of mixers, one per slice', () => {
   }
 });
 
-test('output pipes are surfaced only when a pipe is actually in use', () => {
+test('all eight output pipes are read, and NONE is not a pipe', () => {
   const s = summarise(snapshot.current);
   const byKey = new Map(s.allocations.map((a) => [`${a.screen} ${a.layer}`, a]));
-  assert.deepEqual(byKey.get('S1 NATIVE').pipes, ['pipe1 1']);
-  assert.deepEqual(byKey.get('S3 NATIVE').pipes, ['pipe2 1']);
-  assert.deepEqual(byKey.get('S2 NATIVE').pipes, [], 'NONE is not a pipe');
+
+  // Straight off the hardware: runs sit on non-adjacent, interleaved links.
+  assert.deepEqual(byKey.get('S1 NATIVE').pipes, ['link 1\u2192out 1', 'link 3\u2192out 2']);
+  assert.deepEqual(byKey.get('S3 NATIVE').pipes, ['link 2\u2192out 1', 'link 4\u2192out 2']);
+  assert.deepEqual(byKey.get('S2 NATIVE').pipes, ['link 5\u2192out 1', 'link 7\u2192out 2']);
+
+  // Every run reports exactly two links here, never eight — NONE is skipped.
+  for (const a of s.allocations) assert.equal(a.pipes.length, 2, `${a.screen} ${a.layer}`);
 });
 
 test('diff is empty when running and staged match, and finds a real change', () => {
@@ -157,11 +162,12 @@ test('readMapping round-trips the captured device through the wire', async () =>
   for (const [id, rec] of Object.entries(snapshot.current)) {
     table[`${B(id)}/@props/isAvailable`] = rec.isAvailable;
     if (!rec.isAvailable) continue;
-    for (const p of ['isEnabled', 'usedInScreen', 'usedInLayer', 'channel', 'slice', 'capability', 'seamlessCapa']) {
+    for (const p of ['isEnabled', 'cutnfillCapa', 'usedInScreen', 'usedInLayer', 'channel', 'slice', 'capability', 'seamlessCapa']) {
       table[`${B(id)}/@props/${p}`] = rec[p];
     }
-    table[`${B(id)}/mixerAllocation/@props/usedOnOutPipe1`] = rec.mixerAllocation.usedOnOutPipe1;
-    table[`${B(id)}/mixerAllocation/@props/usedOnOutPipe2`] = rec.mixerAllocation.usedOnOutPipe2;
+    for (let k = 1; k <= 8; k++) {
+      table[`${B(id)}/mixerAllocation/@props/usedOnOutPipe${k}`] = rec.mixerAllocation[`usedOnOutPipe${k}`];
+    }
     for (const s of ['A', 'B']) {
       table[`${B(id)}/$scaler/@items/${s}/@props/memoryFill`] = rec.scalers[s].memoryFill;
       table[`${B(id)}/$scaler/@items/${s}/@props/memoryCut`] = rec.scalers[s].memoryCut;
@@ -180,6 +186,9 @@ test('readMapping round-trips the captured device through the wire', async () =>
     assert.deepEqual(mixers.PROC_1_MIXER_9.usedInScreen, 'S3');
     assert.equal(mixers.PROC_1_MIXER_9.slice, 0);
     assert.equal(mixers.PROC_3_MIXER_1.isAvailable, false);
+    // All eight pipes survive the round trip, interleaved as the hardware sent them.
+    assert.equal(mixers.PROC_1_MIXER_1.mixerAllocation.usedOnOutPipe3, '2');
+    assert.equal(mixers.PROC_1_MIXER_1.mixerAllocation.usedOnOutPipe2, 'NONE');
   } finally {
     client.close();
     server.close();

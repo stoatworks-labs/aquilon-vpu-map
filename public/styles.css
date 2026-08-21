@@ -289,6 +289,12 @@ h2 { font-family:"Archivo",system-ui,sans-serif; font-weight:700; font-size:19px
   color:var(--ink-mid); font-size:13.5px; max-width:78ch;
 }
 .derived-note b { color:var(--ink); font-size:13.5px; }
+.derived-note[data-kind="partial"] { border-left-color:var(--accent); }
+
+svg.vpu .tie { stroke:currentColor; stroke-width:1.5; opacity:.55; stroke-dasharray:2 2; }
+svg.vpu .blk.c1 .tie { color:var(--s1); } svg.vpu .blk.c2 .tie { color:var(--s2); }
+svg.vpu .blk.c3 .tie { color:var(--s3); } svg.vpu .blk.c4 .tie { color:var(--s4); }
+svg.vpu .blk.c5 .tie { color:var(--s5); } svg.vpu .blk.c6 .tie { color:var(--s6); }
 
 .grids { display:grid; grid-template-columns:1fr; gap:14px; }
 @media (min-width:720px) { .grids { grid-template-columns:repeat(2,1fr); } }
@@ -324,7 +330,7 @@ svg.vpu .blk.c4 rect { fill:var(--s4-tint); stroke:var(--s4); }
 svg.vpu .blk.c5 rect { fill:var(--s5-tint); stroke:var(--s5); }
 svg.vpu .blk.c6 rect { fill:var(--s6-tint); stroke:var(--s6); }
 /* a numbered layer reads as an outline, native as a filled block */
-svg.vpu .blk.layered rect { fill:none; stroke-dasharray:3 2; }
+svg.vpu .blk.layered rect { fill:var(--panel-sunk); stroke-dasharray:3 2; }
 
 svg.vpu .blk text {
   font-family:"IBM Plex Mono",ui-monospace,monospace;

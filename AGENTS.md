@@ -45,32 +45,35 @@ device reports that allocation read-only over AWJ. This app reads it and draws i
   nothing ever hides. This bit once — the staged-changes panel rendered empty at zero
   changes.
 
-## Placement is derived, and that is the open question
+## How much placement is reported — settled on hardware, 2026-08-21
 
-`deriveLinkGrid()` places blocks by an explicit rule because **the device reports what
-each mixer serves, not where it sits**: screen, layer, slice and capability, but no row
-or column. Sizes, counts and grouping in the Link grid view are real; row and column
-are not, and the UI says so.
+**Columns: reported.** `mixerAllocation.usedOnOutPipe1..8` names exactly which output
+links a mixer drives. There are **eight** of these, not two — an earlier read fetched
+only pipes 1 and 2 and so saw a quarter of the device's own placement data. Every mixer
+in a (screen, layer) run shares the same set.
 
-**`$vpuLayer` is almost certainly the reported grid:**
+**Runs are interleaved, not contiguous.** On the captured Aquilon C: S1 on links 1 and
+3, S3 on 2 and 4, S2 on 5 and 7. So the grid must draw the links the device names,
+rather than packing each mixer into a contiguous square — which is what the first,
+purely derived version did, and it was wrong in a way that looked plausible.
 
-```
-…/mapping/$device/@items/1/$vpuLayer/@items/PROC_<1-4>_SCALER_<1-8>
-    /@props/{isAvailable,isEnabled,capability,usedInScreen,usedInLayer}
-    /scalerAllocation/@props/usedOnOutPipe<1-8>
-```
+**Rows: not reported.** Nothing names the layer link. Two layers of one screen share
+both their output links and their slice numbers (S4's native and its layer 1 are
+identical on both), so slice cannot separate them, and `channel` reads 0 everywhere.
+`buildLinkGrid()` packs rows: one row per slice, starting at the first row where the
+run's columns are free. Runs on disjoint links share rows; runs that collide stack.
 
-8 scalers per VPU (the rows — `PROC_1_SCALER_9` answers `E12`), each declaring which
-of 8 output pipes it drives (the columns). Alongside it sits `$pipe/@items/1..64` with
-`isUsed`. **The simulator has this collection but leaves it entirely unpopulated**
-(`isAvailable:false`, `capability:'OFF'`, every pipe `'NONE'`), and it has never been
-seen on hardware — the capture predates finding it.
+**`$vpuLayer` does not exist on hardware.** It answers `E12`, as does `$pipe`. Both are
+present-but-permanently-empty on the *simulator*. This is the general lesson:
 
-`scripts/probe-hardware.mjs` exists to settle this; `docs/HARDWARE-PROBE.md` says what
-each outcome means. **If it comes back populated, replace the derived layout with the
-reported one** and keep `deriveLinkGrid()` as the fallback.
+> ⚠️ **The simulator and real hardware expose different collections.** Hardware has
+> `vpuMixerList` and no `pipeList`/`vpuLayerList`; the simulator has exactly the
+> opposite. Anything verified only against the simulator must be re-verified on a
+> device before it is trusted.
 
-Do not quietly upgrade the wording in the UI before that evidence exists.
+`deriveLinkGrid()` remains as the fallback for data with no pipe allocation, and
+`buildLinkGrid()` reports which of the two it used via `placement`. The UI's wording
+follows that flag — keep it honest if the rule changes.
 
 ## Where the model came from
 
@@ -106,21 +109,23 @@ leaf-read-only limitation entirely.
   responder replaying the capture over a real socket.
 - The live request path end to end against the **LivePremier simulator**: connects,
   reads identity, probes the VPU subtree, and reports its absence correctly.
+- **A full live read from a real Aquilon C through this code** (2026-08-21): the server
+  bridge, the UI, the link grid and the budget view, ~750 ms for 64 mixers over AWJ.
 - Both themes, and the failure states (unreachable host, device without a VPU map).
 
 **Not verified:**
 
-- **Where any layer actually sits in the link grid.** See above. The Link grid view is
-  a derived layout and must keep saying so until `$vpuLayer` proves otherwise.
+- **Which layer link (row) anything sits on.** Columns are the device's; rows are packed.
 - Mixed capabilities. Every mixer on the captured box was `4K` (capacity 2), so the
   1×1 and 4×4 block paths in `deriveLinkGrid()` have only ever run in tests.
 - **Combined VPUs** (§5.5.5, a screen over more than 8 outputs) and **Optimized mode**
   (§5.5.6, which removes the 4-link boundary and would make the view's boundary line
   wrong for that VPU). Neither has been seen; neither is handled.
-- **This code has never completed a VPU read from real hardware.** The capture was taken
-  with a separate Python probe, before this client existed. The paths are identical, but
-  a first run against a real Aquilon is still a first run.
 - Nothing has been tested on a **Link** setup, so devices 2–4 are untried.
+- One **transient `EHOSTUNREACH`** was seen mid-session on an otherwise healthy link
+  (ICMP fine, three retries immediately after all succeeded). Cause unknown — possibly
+  the AWJ 5-client cap. The app surfaces it and re-enables the button; worth watching
+  rather than chasing.
 - `capability` values other than `4K`, and `channel` other than `0`, have never been
   seen — the captured device reports the same values throughout.
 - Whether `slice` count tracks canvas width is **inferred from one configuration**, not

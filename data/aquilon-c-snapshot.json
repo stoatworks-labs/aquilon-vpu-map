@@ -1,6 +1,6 @@
 {
  "$schema": "aquilon-vpu-map/snapshot/1",
- "capturedAt": "2026-08-20T16:47:00Z",
+ "capturedAt": "2026-08-21T07:52:04.995Z",
  "source": {
   "kind": "device",
   "dev": "NLC_C",
@@ -8,12 +8,13 @@
   "host": "redacted",
   "firmware": "6.2.x"
  },
- "note": "Recorded from a real Aquilon C over AWJ. Reads only; no writes were issued.",
+ "note": "Recorded from a real Aquilon C over AWJ, through this tool. Reads only; no writes were issued.",
  "device": "1",
  "current": {
   "PROC_1_MIXER_1": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -22,7 +23,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -38,6 +45,7 @@
   "PROC_1_MIXER_2": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -46,7 +54,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -62,6 +76,7 @@
   "PROC_1_MIXER_3": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -70,7 +85,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -86,6 +107,7 @@
   "PROC_1_MIXER_4": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -94,7 +116,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -110,6 +138,7 @@
   "PROC_1_MIXER_5": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -118,7 +147,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -134,6 +169,7 @@
   "PROC_1_MIXER_6": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -142,7 +178,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -158,6 +200,7 @@
   "PROC_1_MIXER_7": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -166,7 +209,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -182,6 +231,7 @@
   "PROC_1_MIXER_8": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -190,7 +240,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -206,6 +262,7 @@
   "PROC_1_MIXER_9": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -214,7 +271,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -230,6 +293,7 @@
   "PROC_1_MIXER_10": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -238,7 +302,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -254,6 +324,7 @@
   "PROC_1_MIXER_11": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -262,7 +333,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -278,6 +355,7 @@
   "PROC_1_MIXER_12": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -286,7 +364,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -302,6 +386,7 @@
   "PROC_1_MIXER_13": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -310,7 +395,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -326,6 +417,7 @@
   "PROC_1_MIXER_14": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -334,7 +426,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -350,6 +448,7 @@
   "PROC_1_MIXER_15": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -358,7 +457,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -374,6 +479,7 @@
   "PROC_1_MIXER_16": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -382,7 +488,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "1",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -398,6 +510,7 @@
   "PROC_2_MIXER_1": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -406,7 +519,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -422,6 +541,7 @@
   "PROC_2_MIXER_2": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -430,7 +550,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -446,6 +572,7 @@
   "PROC_2_MIXER_3": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -454,7 +581,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -470,6 +603,7 @@
   "PROC_2_MIXER_4": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -478,7 +612,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "2",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -494,6 +634,7 @@
   "PROC_2_MIXER_5": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -502,7 +643,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -518,6 +665,7 @@
   "PROC_2_MIXER_6": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -526,7 +674,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -542,6 +696,7 @@
   "PROC_2_MIXER_7": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -550,7 +705,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -566,6 +727,7 @@
   "PROC_2_MIXER_8": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -574,7 +736,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -590,6 +758,7 @@
   "PROC_2_MIXER_9": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -598,7 +767,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -614,6 +789,7 @@
   "PROC_2_MIXER_10": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -622,7 +798,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -638,6 +820,7 @@
   "PROC_2_MIXER_11": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -646,7 +829,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -662,6 +851,7 @@
   "PROC_2_MIXER_12": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -670,7 +860,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "2",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -686,6 +882,7 @@
   "PROC_2_MIXER_13": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -694,7 +891,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -710,6 +913,7 @@
   "PROC_2_MIXER_14": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -718,7 +922,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -734,6 +944,7 @@
   "PROC_2_MIXER_15": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -742,7 +953,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -758,6 +975,7 @@
   "PROC_2_MIXER_16": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -766,7 +984,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -880,6 +1104,7 @@
   "PROC_1_MIXER_1": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -888,7 +1113,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -904,6 +1135,7 @@
   "PROC_1_MIXER_2": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -912,7 +1144,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -928,6 +1166,7 @@
   "PROC_1_MIXER_3": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -936,7 +1175,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -952,6 +1197,7 @@
   "PROC_1_MIXER_4": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -960,7 +1206,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -976,6 +1228,7 @@
   "PROC_1_MIXER_5": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -984,7 +1237,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1000,6 +1259,7 @@
   "PROC_1_MIXER_6": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1008,7 +1268,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1024,6 +1290,7 @@
   "PROC_1_MIXER_7": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1032,7 +1299,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1048,6 +1321,7 @@
   "PROC_1_MIXER_8": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S2",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1056,7 +1330,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1072,6 +1352,7 @@
   "PROC_1_MIXER_9": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1080,7 +1361,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1096,6 +1383,7 @@
   "PROC_1_MIXER_10": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1104,7 +1392,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1120,6 +1414,7 @@
   "PROC_1_MIXER_11": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1128,7 +1423,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1144,6 +1445,7 @@
   "PROC_1_MIXER_12": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1152,7 +1454,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1168,6 +1476,7 @@
   "PROC_1_MIXER_13": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1176,7 +1485,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1192,6 +1507,7 @@
   "PROC_1_MIXER_14": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1200,7 +1516,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1216,6 +1538,7 @@
   "PROC_1_MIXER_15": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1224,7 +1547,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1240,6 +1569,7 @@
   "PROC_1_MIXER_16": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "4K",
    "usedInScreen": "S3",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1248,7 +1578,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "1"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "1",
+    "usedOnOutPipe6": "2",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1264,6 +1600,7 @@
   "PROC_2_MIXER_1": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -1272,7 +1609,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1288,6 +1631,7 @@
   "PROC_2_MIXER_2": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -1296,7 +1640,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1312,6 +1662,7 @@
   "PROC_2_MIXER_3": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -1320,7 +1671,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1336,6 +1693,7 @@
   "PROC_2_MIXER_4": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S3",
    "usedInLayer": "1",
    "channel": 0,
@@ -1344,7 +1702,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "1",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "2",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1360,6 +1724,7 @@
   "PROC_2_MIXER_5": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1368,7 +1733,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1384,6 +1755,7 @@
   "PROC_2_MIXER_6": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1392,7 +1764,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1408,6 +1786,7 @@
   "PROC_2_MIXER_7": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1416,7 +1795,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1432,6 +1817,7 @@
   "PROC_2_MIXER_8": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1440,7 +1826,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1456,6 +1848,7 @@
   "PROC_2_MIXER_9": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -1464,7 +1857,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1480,6 +1879,7 @@
   "PROC_2_MIXER_10": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -1488,7 +1888,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1504,6 +1910,7 @@
   "PROC_2_MIXER_11": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -1512,7 +1919,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1528,6 +1941,7 @@
   "PROC_2_MIXER_12": {
    "isAvailable": true,
    "isEnabled": true,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S4",
    "usedInLayer": "1",
    "channel": 0,
@@ -1536,7 +1950,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "1",
+    "usedOnOutPipe4": "2",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1552,6 +1972,7 @@
   "PROC_2_MIXER_13": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1560,7 +1981,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1576,6 +2003,7 @@
   "PROC_2_MIXER_14": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1584,7 +2012,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1600,6 +2034,7 @@
   "PROC_2_MIXER_15": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1608,7 +2043,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {
@@ -1624,6 +2065,7 @@
   "PROC_2_MIXER_16": {
    "isAvailable": true,
    "isEnabled": false,
+   "cutnfillCapa": "OFF",
    "usedInScreen": "S1",
    "usedInLayer": "NATIVE",
    "channel": 0,
@@ -1632,7 +2074,13 @@
    "seamlessCapa": true,
    "mixerAllocation": {
     "usedOnOutPipe1": "NONE",
-    "usedOnOutPipe2": "NONE"
+    "usedOnOutPipe2": "NONE",
+    "usedOnOutPipe3": "NONE",
+    "usedOnOutPipe4": "NONE",
+    "usedOnOutPipe5": "NONE",
+    "usedOnOutPipe6": "NONE",
+    "usedOnOutPipe7": "NONE",
+    "usedOnOutPipe8": "NONE"
    },
    "scalers": {
     "A": {

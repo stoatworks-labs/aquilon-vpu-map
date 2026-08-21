@@ -3,9 +3,27 @@
 **The question:** does an Aquilon report *where* each layer sits in the 8×8 link
 grid, or only *what* each mixer serves?
 
-Right now the Link grid view places blocks by a derived rule. If the device reports
-real placement, that view becomes reported fact instead — a meaningful upgrade, and
-the only thing standing between this tool and being trustworthy for planning.
+## Answered — Aquilon C, firmware 6.2, 2026-08-21
+
+**Columns yes, rows no.**
+
+- `mixerAllocation.usedOnOutPipe1..8` names exactly which output links each mixer
+  drives. There are **eight**, not two. Runs are **interleaved**: S1 on links 1 and 3,
+  S3 on 2 and 4, S2 on 5 and 7.
+- Nothing names the layer link. Two layers of one screen share their links *and* their
+  slice numbers, and `channel` is 0 on every mixer.
+- **`$vpuLayer` and `$pipe` answer `E12` on hardware.** They exist but are permanently
+  empty on the simulator — the two implementations expose different collections
+  (hardware: `vpuMixerList` only; simulator: `pipeList` + `vpuLayerList` only).
+- CORS: no `Access-Control-Allow-Origin`, port 443 closed. The hosting question is
+  closed — a browser-only tool cannot reach a device.
+- New prop found in passing: **`cutnfillCapa`** (`OFF` throughout on this chassis).
+
+The rest of this document is the procedure, still worth re-running on new firmware, a
+**Link** setup, or a busier chassis.
+
+The Link grid view uses the reported columns and packs the rows. Re-running this
+tells you whether a different device, firmware or configuration reports more.
 
 Everything below is **read-only**: HTTP `GET` and AWJ `get`. Nothing writes.
 
@@ -43,15 +61,17 @@ Expect a large download — **124 MB on the simulator**, of which resources is ~
 The script keeps only the resources part.
 
 `mapping-shape.json` then lists which collections exist under
-`mapping/deviceList/items/<device>`. **This is the money shot.** On the simulator
-there are exactly two:
+`mapping/deviceList/items/<device>`. **This is the money shot**, and the two
+implementations disagree completely:
 
 ```
-device 1: pipeList, vpuLayerList
+hardware   device 1: vpuMixerList
+simulator  device 1: pipeList, vpuLayerList
 ```
 
-On hardware there should be **three** — `vpuMixerList` as well. If a collection
-appears that we have not seen, it is worth reading in full.
+Anything new appearing here is worth reading in full — it is the cheapest discovery
+available. It is also how the eight-pipe `mixerAllocation` was found, after the AWJ
+reader had been fetching only two of them.
 
 ### Step 2 — CORS and HTTPS
 
@@ -77,9 +97,10 @@ distinct channel values : [...]
 
 On the captured Aquilon C **every** mixer reported `channel: 0`, which makes
 `channel` useless for placement. If a busier box shows `0..3`, `channel` is probably
-the scaling-engine or quadrant index and becomes a real placement input.
+the scaling-engine or quadrant index and would become a real placement input — that
+is the single most valuable thing a different chassis could reveal.
 
-### Step 5 — the one that matters: `$vpuLayer`
+### Step 5 — `$vpuLayer`, a dead end worth re-checking
 
 ```
 DeviceObject/preconfig/resources/current/status/mapping/$device/@items/1
@@ -88,49 +109,18 @@ DeviceObject/preconfig/resources/current/status/mapping/$device/@items/1
     /scalerAllocation/@props/usedOnOutPipe<1-8>
 ```
 
-**This is the grid.** Eight scalers per VPU — the eight *layer links*, the rows —
-each declaring which of eight *output pipes* it drives, the columns. 32 scalers per
-device; `PROC_1_SCALER_9` answers `E12`, confirming 8 per VPU.
+This *looked* like the grid: eight scalers per VPU (the layer links, the rows), each
+declaring which of eight output pipes it drives (the columns), with
+`PROC_1_SCALER_9` answering `E12` to confirm 8 per VPU.
 
-Confirmed present on the simulator, but **entirely unpopulated** there:
-`isAvailable:false`, `capability:'OFF'`, every pipe `'NONE'`.
+It is not. **On hardware the whole collection answers `E12`** — it does not exist. On
+the simulator it exists and is permanently empty. The step is kept so that a firmware
+which starts populating it announces itself.
 
-The script prints one of two verdicts.
-
----
-
-## Reading the verdict
-
-### `*** POPULATED — the device reports real link placement. ***`
-
-Best case. Each row printed is a layer link and the pipes it drives:
-
-```
-PROC_1_SCALER_1    S1   NATIVE  cap 4K   1->1 2->1 3->1 4->1
-```
-
-That is screen S1's native layer on layer-link 1, spanning output pipes 1–4.
-
-**Then:** the derived layout is replaced by reported data. `deriveLinkGrid()` in
-`public/vpu.js` keeps its place as a fallback for devices that report nothing, and a
-new reader maps scaler → row, `usedOnOutPipe<n>` → columns. The "Derived layout"
-warning in the UI is replaced with the source. Also worth capturing at that point:
-whether a wrapped layer really does occupy two scalers, which would confirm §5.5.4
-directly rather than by inference.
-
-### `*** EMPTY — every scaler reports NONE on all 8 pipes. ***`
-
-Same as the simulator. Then either the collection only populates under conditions we
-have not hit, or it is genuinely unused and placement is not reported.
-
-**Then, before concluding:** check `resources-subtree.json` by hand for the
-`new` side as well as `current`, and check `pipeList` — if pipes show `isUsed:true`
-while scalers show `NONE`, something else is driving them and is worth finding.
-Also check whether `vpuMixerList` exists there with fields the AWJ read does not
-expose.
-
-If it is genuinely empty, the derived layout stays, and the honest wording in the UI
-stays with it.
+**If it ever does populate**, it supersedes the packed rows: map scaler → row,
+`usedOnOutPipe<n>` → columns, and drop the row-packing in `buildLinkGrid()` to a
+fallback. That would also settle §5.5.4 directly — whether a wrapped layer really
+does occupy two scalers — instead of by inference.
 
 ---
 

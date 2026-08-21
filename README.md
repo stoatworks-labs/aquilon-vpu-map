@@ -1,13 +1,11 @@
 # Aquilon VPU Map
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. The VPU mixer model and every
-> path in it were **captured from a real Aquilon C**, and the parsing, summarising and
-> diffing are covered by tests that run against that capture. But **this code has never
-> completed a VPU read from real hardware** — its live path has only been exercised
-> against the LivePremier simulator (which exposes no VPU map at all) and against a
-> scripted AWJ responder replaying the capture. Treat a first run on a real device as
-> the real test.
+> (Anthropic), directed and reviewed by a human author. **It has read a real Aquilon C
+> end to end** — 32 of 64 mixers fitted, 28 in use, in about 750 ms — and the recorded
+> capture, the tests and the screenshots all come from that device. Still untested:
+> **Link** setups (devices 2–4), capabilities other than `4K`, combined VPUs, Optimized
+> mode and Cut & Fill, none of which that chassis uses.
 
 See how an Analog Way **LivePremier** allocates its VPU mixers across screens, layers
 and slices.
@@ -32,16 +30,21 @@ A VPU spreads a layer over at most **4 output links**; a layer wider than that t
 a second layer link and wraps onto it (§5.5.4), which the view marks with the
 manual's hook. A screen needing more than 8 outputs spills into another VPU (§5.5.5).
 
-> **Placement in this view is derived, not reported.** The device says what each
-> mixer serves — screen, layer, slice, capability — but not which row and column it
-> occupies. Blocks are laid out by an explicit rule: each screen-and-layer run runs
-> left to right in capacity-sized squares, wrapping onto another layer link when one
-> fills. Sizes, counts and grouping are real; exact row and column are not.
+> **Columns are the device's own; rows are derived.**
 >
-> `$vpuLayer` — 8 scalers per VPU, each declaring which of 8 output pipes it drives —
-> looks like the reported grid, but reads empty on the simulator and has never been
-> seen populated. [docs/HARDWARE-PROBE.md](docs/HARDWARE-PROBE.md) is the procedure
-> for settling it on real hardware.
+> Each mixer reports `usedOnOutPipe1..8` — exactly which output links it drives — so
+> horizontal position is real. It is also not what you would guess: runs are
+> **interleaved**, not contiguous. On the captured Aquilon C, S1 sits on links 1 and 3,
+> S3 on 2 and 4, S2 on 5 and 7.
+>
+> Nothing names the layer link, though. Two layers of one screen share both their output
+> links *and* their slice numbers — S4's native and its layer 1 are identical on both —
+> so rows are packed: one row per slice, starting at the first row where the run's
+> columns are free. Runs on separate links share rows; runs that collide stack.
+>
+> `$vpuLayer`, which looked like the reported grid, **does not exist on hardware** — it
+> answers `E12`, as does `$pipe`. Both are present but permanently empty on the
+> simulator. See [docs/HARDWARE-PROBE.md](docs/HARDWARE-PROBE.md).
 
 ## What a VPU mixer is
 
@@ -116,6 +119,10 @@ an empty chassis.
 `$device/@items/1` and then stops. This is not a bug in the tool; the simulator has no
 processor boards to map.
 
+The simulator and real hardware do not expose the same collections at all. Hardware has
+`vpuMixerList` and neither `pipeList` nor `vpuLayerList`; the simulator has exactly the
+opposite. Anything checked only against the simulator should be re-checked on a device.
+
 ## Paths
 
 Firmware 6.2, verified on hardware. The collection segment is `$vpuMixer`, camelCase —
@@ -132,7 +139,8 @@ DeviceObject/preconfig/resources/{current|new}/status/mapping
     /@props/slice                             0..8
     /@props/capability                        OFF DUAL 4K 3 5K 5 6 7 8K
     /@props/{channel,seamlessCapa}
-    /mixerAllocation/@props/usedOnOutPipe{1,2} NONE..64
+    /@props/cutnfillCapa                      OFF, or the capability it doubles
+    /mixerAllocation/@props/usedOnOutPipe{1-8} which output link, NONE..64
     /$scaler/@items/{A,B}/@props/{memoryFill,memoryCut}  SM1..SM8
 ```
 

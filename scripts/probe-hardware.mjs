@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 //
-// Hardware probe — answers one question: does the device report WHERE each VPU
-// mixer sits in the 8x8 link grid, or only what it serves?
+// Hardware probe — how much of the 8x8 link grid does the device actually report?
+//
+// Answered 2026-08-21 on an Aquilon C: COLUMNS yes (mixerAllocation.usedOnOutPipe1..8),
+// ROWS no. Re-run it on new firmware, a Link setup, or a busier chassis.
 //
 // READS ONLY. Two HTTP GETs and a set of AWJ `get`s. Nothing is written to the
 // device — no `replace`, no Subscriptions, no HTTP verb other than GET.
@@ -74,10 +76,10 @@ try {
   log('      (if this fails, steps 2-4 still stand on their own)');
 }
 
-/* What sits alongside vpuMixerList? On the simulator the mapping held
-   `pipeList` and `vpuLayerList` but no `vpuMixerList`. On hardware all three
-   should be present, and the two we have never read are the prime suspects
-   for link placement. */
+/* What sits alongside vpuMixerList? The answer differs by implementation:
+   hardware has ONLY `vpuMixerList`; the simulator has `pipeList` and
+   `vpuLayerList` and no mixer list. Worth re-checking on every new firmware —
+   a collection appearing here is the cheapest possible discovery. */
 if (store) {
   try {
     const items = store.device.preconfig.resources.current.status.mapping.deviceList.items;
@@ -142,11 +144,9 @@ const M = 'DeviceObject/preconfig/resources/current/status/mapping/$device/@item
 const R = 'DeviceObject/preconfig/resources/current';
 
 const candidates = [
-  // CONFIRMED on the simulator: $vpuLayer is the 8x8 link grid.
-  // Rows = PROC_<1-4>_SCALER_<1-8> (8 layer links per VPU),
-  // columns = scalerAllocation/usedOnOutPipe1..8 (8 output links).
-  // On the simulator these exist but are unpopulated (isAvailable=false,
-  // capability=OFF). The whole point of this run is to see them populate.
+  // $vpuLayer looked like the 8x8 grid but is a dead end: E12 on hardware,
+  // present-but-empty on the simulator. Kept in the sweep so a future firmware
+  // that starts populating it shows up immediately.
   `${M}/$vpuLayer/@items/PROC_1_SCALER_1/@props/isAvailable`,
   `${M}/$vpuLayer/@items/PROC_1_SCALER_1/@props/capability`,
   `${M}/$vpuLayer/@items/PROC_1_SCALER_1/@props/usedInScreen`,
@@ -287,9 +287,10 @@ try {
     }
     if (withPipes.length > 12) log(`      … and ${withPipes.length - 12} more (see vpu-layers.json)`);
   } else {
-    log('    *** EMPTY — every scaler reports NONE on all 8 pipes. ***');
-    log('    Same as the simulator. The grid view must stay a derived layout;');
-    log('    placement is not reported and vpu-layers.json will say so.');
+    log('    *** NO $vpuLayer DATA. ***');
+    log('    On hardware this collection does not exist at all (E12); on the simulator');
+    log('    it exists but is permanently empty. Either way it is not the grid.');
+    log('    Columns come from mixerAllocation.usedOnOutPipe1..8 instead — see step 4.');
   }
 } catch (err) {
   log(`    ✗ ${err.message}`);

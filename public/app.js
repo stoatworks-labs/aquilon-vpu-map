@@ -12,7 +12,7 @@ import {
   parseMixerId,
   summarise,
   diff,
-  deriveLinkGrid,
+  buildLinkGrid,
 } from './vpu.js';
 
 const $ = (id) => document.getElementById(id);
@@ -166,8 +166,13 @@ function renderChassis(mixers, colours, changedIds) {
       }
       const colour = colours.get(rec.usedInScreen) || 'c1';
       const layered = rec.usedInLayer === 'NATIVE' ? '' : ' layered';
-      const pipes = [rec.mixerAllocation?.usedOnOutPipe1, rec.mixerAllocation?.usedOnOutPipe2]
-        .map((v, i) => (v && v !== 'NONE' ? `pipe${i + 1} ${v}` : null))
+      const alloc = rec.mixerAllocation || {};
+      const pipes = Object.keys(alloc)
+        .map((k) => {
+          const n = Number(k.replace('usedOnOutPipe', ''));
+          const v = alloc[k];
+          return v && v !== 'NONE' ? `link ${n}\u2192out ${v}` : null;
+        })
         .filter(Boolean)
         .join(', ');
 
@@ -282,42 +287,61 @@ function renderVpu(grid, colours) {
       svg('path', { class: cls, d: 'M0,1 L7,4 L0,7 z' }));
   root.append(svg('defs', {}, marker(`in-${grid.vpu}`, 'ah-in'), marker(`out-${grid.vpu}`, 'ah-out')));
 
-  // layer blocks
+  // layer blocks — a mixer occupies one cell per output link it drives, and the
+  // device reports those columns, so non-adjacent columns are drawn as they are
+  // rather than forced into a contiguous square.
   for (const b of grid.blocks) {
     const colour = colours.get(b.screen) || 'c1';
-    const bx = x0 + b.col * CELL;
-    const by = y0 + b.row * CELL;
-    const bw = b.size * CELL;
-    const bh = b.size * CELL;
     const isNative = b.layer === 'NATIVE';
+    const cols = b.cols || [b.col];
+    const span = b.size || 1;
+    const by = y0 + b.row * CELL;
+    const bh = span * CELL;
 
     const g = svg('g', { class: `blk ${colour}${isNative ? '' : ' layered'}` });
     g.append(
       svg('title', {}, document.createTextNode(
         `${b.mixer}\n${b.screen} · ${layerLabel(b.layer)} · slice ${b.slice}` +
         `\ncapability ${b.capability}` +
-        (b.wrapped ? '\nwrapped onto an additional layer link' : '') +
-        (b.crossesBoundary ? '\npast the scaling-engine boundary' : ''),
+        (b.cutnfill && b.cutnfill !== 'OFF' ? `\ncut & fill ${b.cutnfill}` : '') +
+        `\noutput link${cols.length === 1 ? '' : 's'} ${cols.map((c) => c + 1).join(', ')}` +
+        (b.spansBoundary ? '\nspans the scaling-engine boundary' : ''),
       )),
-      svg('rect', { x: bx + 1.5, y: by + 1.5, width: bw - 3, height: bh - 3, rx: 2 }),
     );
 
-    if (bw >= 46) {
-      g.append(
-        svg('text', { class: 'b-scr', x: bx + bw / 2, y: by + bh / 2 - 4 }, document.createTextNode(String(b.screen))),
-        svg('text', { class: 'b-ly', x: bx + bw / 2, y: by + bh / 2 + 8 },
-          document.createTextNode(isNative ? 'NAT' : `L${b.layer}`)),
-      );
-    } else {
-      g.append(svg('text', { class: 'b-scr sm', x: bx + bw / 2, y: by + bh / 2 + 3 },
-        document.createTextNode(String(b.screen))));
+    // Tie a mixer's separated cells together so it reads as one allocation.
+    // Drawn before the cells so it passes behind them, not across their labels.
+    if (cols.length > 1) {
+      const a = x0 + cols[0] * CELL + (span * CELL) / 2;
+      const z = x0 + cols[cols.length - 1] * CELL + (span * CELL) / 2;
+      g.append(svg('line', { class: 'tie', x1: a, y1: by + bh / 2, x2: z, y2: by + bh / 2 }));
     }
 
-    // the manual's wrap hook
-    if (b.wrapped && b.col === 0) {
+    cols.forEach((c, i) => {
+      const bx = x0 + c * CELL;
+      const bw = span * CELL;
+      g.append(svg('rect', { x: bx + 1.5, y: by + 1.5, width: bw - 3, height: bh - 3, rx: 2 }));
+      // Label the first cell only; the rest are the same mixer.
+      if (i === 0) {
+        if (bw >= 46 && bh >= 40) {
+          g.append(
+            svg('text', { class: 'b-scr', x: bx + bw / 2, y: by + bh / 2 - 4 },
+              document.createTextNode(String(b.screen))),
+            svg('text', { class: 'b-ly', x: bx + bw / 2, y: by + bh / 2 + 8 },
+              document.createTextNode(isNative ? 'NAT' : `L${b.layer}`)),
+          );
+        } else {
+          g.append(svg('text', { class: 'b-scr sm', x: bx + bw / 2, y: by + bh / 2 + 3.5 },
+            document.createTextNode(String(b.screen))));
+        }
+      }
+    });
+
+    // the manual's wrap hook, for the derived fallback layout
+    if (b.wrapped && (b.col === 0 || cols[0] === 0)) {
       g.append(svg('path', {
         class: 'hook',
-        d: `M${bx - 9},${by - CELL + bh / 2} q0,${CELL / 2} 7,${CELL / 2}`,
+        d: `M${x0 - 9},${by - CELL + bh / 2} q0,${CELL / 2} 7,${CELL / 2}`,
       }));
     }
     root.append(g);
@@ -337,7 +361,7 @@ function renderVpu(grid, colours) {
 }
 
 function renderGrids(mixers, colours) {
-  const grids = deriveLinkGrid(mixers);
+  const grids = buildLinkGrid(mixers);
   els.grids.replaceChildren(
     ...grids.map((g) =>
       el(
@@ -360,14 +384,26 @@ function renderGrids(mixers, colours) {
   );
 
   const placed = grids.reduce((n, g) => n + g.blocks.length, 0);
+  const reported = grids.some((g) => g.placement === 'reported-columns');
+
+  els.derivedNote.dataset.kind = reported ? 'partial' : 'derived';
   els.derivedNote.replaceChildren(
-    el('b', { text: 'Derived layout — position is not reported by the device.' }),
+    el('b', {
+      text: reported
+        ? 'Columns are the device\u2019s own; rows are derived.'
+        : 'Derived layout \u2014 position is not reported by the device.',
+    }),
     el('span', {
-      text:
-        `The device says what each of these ${placed} blocks serves (screen, layer, slice, capability) ` +
-        'but not which link it occupies. Blocks are placed by laying each screen-and-layer run left to right ' +
-        'in capacity-sized squares, wrapping onto another layer link when a run fills one. ' +
-        'Sizes, counts and grouping are real; exact row and column are not.',
+      text: reported
+        ? `Each of these ${placed} mixers reports exactly which output links it drives, so horizontal ` +
+          'position is the device\u2019s. Nothing identifies the layer link, though \u2014 two layers of one ' +
+          'screen share both their output links and their slice numbers \u2014 so rows are packed: one row per ' +
+          'slice, starting at the first row where the run\u2019s columns are free. Runs on separate links share ' +
+          'rows; runs that collide stack.'
+        : `The device says what each of these ${placed} blocks serves (screen, layer, slice, capability) ` +
+          'but not which link it occupies. Blocks are placed by laying each screen-and-layer run left to right ' +
+          'in capacity-sized squares, wrapping onto another layer link when a run fills one. ' +
+          'Sizes, counts and grouping are real; exact row and column are not.',
     }),
   );
 }

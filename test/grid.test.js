@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  buildLinkGrid,
   deriveLinkGrid,
   capacityToLinks,
   LINKS_PER_VPU,
@@ -114,4 +115,63 @@ test('deriveLinkGrid tolerates empty input', () => {
   assert.equal(grid.length, 4);
   assert.ok(grid.every((g) => g.blocks.length === 0 && !g.overflow));
   assert.doesNotThrow(() => deriveLinkGrid(null));
+});
+
+/* ---------- reported columns (hardware, 2026-08-21) ---------- */
+
+test('buildLinkGrid uses the device’s own output links for columns', () => {
+  const grid = buildLinkGrid(snapshot.current);
+  const p1 = grid.find((g) => g.vpu === 1);
+  assert.equal(p1.placement, 'reported-columns');
+
+  const runCols = (g, screen, layer) => {
+    const b = g.blocks.find((x) => x.screen === screen && x.layer === layer);
+    return b.cols.map((c) => c + 1);
+  };
+  // Interleaved, exactly as the hardware reports it.
+  assert.deepEqual(runCols(p1, 'S1', 'NATIVE'), [1, 3]);
+  assert.deepEqual(runCols(p1, 'S3', 'NATIVE'), [2, 4]);
+  assert.deepEqual(runCols(p1, 'S2', 'NATIVE'), [5, 7]);
+});
+
+test('runs on disjoint links share rows; runs that collide stack', () => {
+  const grid = buildLinkGrid(snapshot.current);
+
+  const rows = (g, screen, layer) => {
+    const rs = g.blocks.filter((b) => b.screen === screen && b.layer === layer).map((b) => b.row);
+    return [Math.min(...rs), Math.max(...rs)];
+  };
+
+  // VPU 1: three runs, none sharing a link, so all start at row 0.
+  const p1 = grid.find((g) => g.vpu === 1);
+  assert.deepEqual(rows(p1, 'S1', 'NATIVE'), [0, 3]);
+  assert.deepEqual(rows(p1, 'S2', 'NATIVE'), [0, 3]);
+  assert.deepEqual(rows(p1, 'S3', 'NATIVE'), [0, 7]);
+
+  // VPU 2: S4's native and layer 1 share links 5 and 7, so layer 1 stacks below.
+  const p2 = grid.find((g) => g.vpu === 2);
+  assert.deepEqual(rows(p2, 'S4', 'NATIVE'), [0, 3]);
+  assert.deepEqual(rows(p2, 'S4', '1'), [4, 7]);
+});
+
+test('no cell is claimed twice, and nothing overflows', () => {
+  for (const g of buildLinkGrid(snapshot.current)) {
+    const taken = new Set();
+    for (const b of g.blocks) {
+      for (const c of b.cols) {
+        const k = `${b.row},${c}`;
+        assert.ok(!taken.has(k), `VPU ${g.vpu}: ${b.mixer} collides at ${k}`);
+        taken.add(k);
+      }
+    }
+    assert.equal(g.overflow, false, `VPU ${g.vpu} fits in ${LINKS_PER_VPU} layer links`);
+  }
+});
+
+test('falls back to the derived layout when no pipes are reported', () => {
+  const stripped = {};
+  for (const [id, r] of Object.entries(snapshot.current)) stripped[id] = { ...r, mixerAllocation: {} };
+  const grid = buildLinkGrid(stripped);
+  assert.ok(grid.every((g) => g.placement === 'derived'));
+  assert.equal(grid.find((g) => g.vpu === 1).blocks.length, 16);
 });
