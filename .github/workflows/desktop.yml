@@ -63,6 +63,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+      # generate_context! embeds the frontend at COMPILE time, so dist-frontend/
+      # must exist before anything cargo does — including the tests. It is
+      # generated, not committed, and tauri-action's own beforeBuildCommand runs
+      # too late for this step.
+      - name: Stage the frontend
+        run: node scripts/stage-frontend.mjs
+
       # The read path has its own tests, including one asserting that every
       # frame this app can send is a `get`. Run them before bundling anything.
       - name: Test the read path

@@ -10,7 +10,7 @@
 use crate::awj::Awj;
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
