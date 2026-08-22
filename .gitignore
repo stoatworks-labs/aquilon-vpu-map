@@ -4,4 +4,15 @@ node_modules/
 .env
 dist-frontend/
 src-tauri/target/
-src-tauri/gen/
+# The generated iOS project is regenerated in full by `tauri ios init` and
+# nothing in it is hand written -- persistent plist keys live in
+# src-tauri/Info.ios.plist, which Tauri merges.
+src-tauri/gen/*
+!src-tauri/gen/android/
+
+# gen/android/ is tracked. MainActivity.kt is the one file Tauri puts outside
+# generated/, and it carries the window-inset handling that keeps the page out
+# from under Android's system bars -- there is no configuration field for that,
+# so the source is the only place it can live. Tauri ships .gitignore files
+# inside the directory that exclude build output and jniLibs, so it costs about
+# forty small files. `tauri android init` overwrites MainActivity.kt.
