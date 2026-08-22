@@ -17,6 +17,52 @@ a time. This puts the whole chassis on one screen.
 
 ![The chassis map, read from a real Aquilon C](docs/screenshot.png)
 
+<!-- downloads:start -->
+
+## Download
+
+**[v1.2.0](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/tag/v1.2.0)** — prebuilt for macOS, Windows and Linux. Pick your platform:
+
+<details>
+<summary><b>macOS</b> — Apple Silicon, Intel</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| Apple Silicon · .dmg disk image | [`Aquilon.VPU.Map_1.2.0_aarch64.dmg`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.0/Aquilon.VPU.Map_1.2.0_aarch64.dmg) | 1.8 MB |
+| Intel · .dmg disk image | [`Aquilon.VPU.Map_1.2.0_x64.dmg`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.0/Aquilon.VPU.Map_1.2.0_x64.dmg) | 1.9 MB |
+
+</details>
+
+<details>
+<summary><b>Windows</b> — x64</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| x64 · .exe installer | [`Aquilon.VPU.Map_1.2.0_x64-setup.exe`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.0/Aquilon.VPU.Map_1.2.0_x64-setup.exe) | 1.6 MB |
+
+</details>
+
+<details>
+<summary><b>Linux</b> — x64</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| x64 · .deb package (Debian/Ubuntu) | [`Aquilon.VPU.Map_1.2.0_amd64.deb`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.0/Aquilon.VPU.Map_1.2.0_amd64.deb) | 2.4 MB |
+| x64 · .rpm package (Fedora/RHEL) | [`Aquilon.VPU.Map-1.2.0-1.x86_64.rpm`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.0/Aquilon.VPU.Map-1.2.0-1.x86_64.rpm) | 2.4 MB |
+
+</details>
+
+Also in this release:
+
+- [`Aquilon.VPU.Map_aarch64.app.tar.gz`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/latest/download/Aquilon.VPU.Map_aarch64.app.tar.gz) — Source tarball, 1.8 MB
+- [`Aquilon.VPU.Map_x64.app.tar.gz`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/latest/download/Aquilon.VPU.Map_x64.app.tar.gz) — Source tarball, 1.9 MB
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/aquilon-vpu-map/releases](https://github.com/stoatworks-labs/aquilon-vpu-map/releases).
+
+macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so SmartScreen warns once.
+
+<!-- downloads:end -->
+
 ## The link grid
 
 ![Each VPU as an 8x8 field of links](docs/link-grid.png)
