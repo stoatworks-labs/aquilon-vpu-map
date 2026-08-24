@@ -261,3 +261,10 @@ test/              node:test, no runner
 The older Analog Way platforms — LiveCore and Midra classic — speak a completely
 different mnemonics-over-TCP-10500 protocol and are handled by **openrcs**, which is
 unrelated to this code beyond both talking to Analog Way gear.
+
+## Notes
+
+`docs/NOTES.md` carries this repo's working notes — current status, decisions
+already made, and the traps that have actually bitten. Read it before changing
+anything non-obvious. Cross-cutting fleet knowledge lives in
+[fleet-notes](https://github.com/stoatworks-labs/fleet-notes).
