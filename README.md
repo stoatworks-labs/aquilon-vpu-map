@@ -1,12 +1,24 @@
 # Aquilon VPU Map
 
-> **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. **It has read a real Aquilon C
-> end to end**, in two different configurations — the captures, the tests and the
-> screenshots all come from that device, and the second configuration corrected two
-> things the first had made look settled. Still untested: **Link** setups (devices
-> 2–4), capacities other than `4K` and `5K`, combined VPUs, Optimized mode and Cut &
-> Fill.
+> **AI-assisted project. Status: field testing.** This codebase was created with
+> [Claude](https://claude.com/claude-code) (Anthropic), directed and reviewed by a human
+> author. **It has read a real Aquilon C end to end**, in two different configurations —
+> the captures, the tests and the screenshots all come from that device, and the second
+> configuration corrected two things the first had made look settled.
+>
+> **Verified against a second chassis, 2026-09-09.** `scripts/probe-hardware.mjs`,
+> `scripts/profile-vpu.mjs` and `scripts/capture-config.mjs` were all run against a
+> different Aquilon C (`NLC_C`, firmware 6.2.73) and agreed with the recorded model: 32
+> mixers fitted, 24 enabled, `channel` still `[0]` on every one, slices `[0,1,2,3]`,
+> capability `4K`. **`$vpuLayer` is still absent on 6.2.73** — it answers `E12` on
+> hardware and exists-but-empty on the simulator — so the link grid still has to be
+> derived from `mixerAllocation.usedOnOutPipe1..8`, exactly as this repo does. Re-run
+> `probe-hardware.mjs` after any firmware update; that is what it is for.
+>
+> Still untested: **Link** setups (devices 2–4), capacities other than `4K` and `5K`,
+> combined VPUs, Optimized mode and Cut & Fill. `capture-config.mjs --report` lists what
+> each open question needs and why it matters — capacity-1, over-budget and Cut & Fill
+> first if device time is short.
 
 See how an Analog Way **LivePremier** allocates its VPU mixers across screens, layers
 and slices.
