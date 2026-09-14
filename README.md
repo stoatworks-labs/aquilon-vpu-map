@@ -164,8 +164,8 @@ Grab it from [Releases](https://github.com/stoatworks-labs/aquilon-vpu-map/relea
 macOS, Windows or Linux, about 2 MB because it uses the system WebView rather
 than bundling a browser.
 
-> The macOS build is **not signed yet**, so Gatekeeper refuses it on first open
-> with a message that reads like the file is damaged. Right-click → Open, once.
+> The macOS builds are signed and notarised and open normally. The Windows
+> builds are unsigned, so SmartScreen warns once.
 
 Same UI as the server build; the difference is only how it reaches the switcher.
 On the desktop, Rust makes the AWJ connection directly.

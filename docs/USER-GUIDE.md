@@ -14,8 +14,9 @@ whole chassis on one screen.
 > second configuration *corrected* two things the first had made look settled.
 >
 > Still untested: **Link setups** (devices 2–4), capacities other than 4K and 5K, combined VPUs,
-> **Optimized mode** and **Cut & Fill**. There is no Aquilon here any more, so those are
-> configurations somebody with hardware has to build.
+> **Optimized mode** and **Cut & Fill**. The model was re-checked against a second
+> Aquilon C on 2026-09-09 and held, but there is no frame here between visits, so those
+> are configurations somebody with hardware has to build.
 >
 > This codebase was created with AI assistance, directed and reviewed by a human author.
 
