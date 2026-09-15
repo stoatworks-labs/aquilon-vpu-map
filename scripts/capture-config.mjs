@@ -230,23 +230,30 @@ const GAPS = [
   },
   {
     id: 'output-header',
-    what: 'Which output plug each of a screen’s links is',
+    what: 'The order of a screen’s links over its outputs',
     why:
       'The header over the grid’s columns deals a screen’s links out over its ' +
       'outputs in output-number order, two per 4K output (`screenOutputLinks`). ' +
-      'That order is the only one the object model offers and no hardware has ' +
-      'confirmed it — the outputs were never read off the Aquilon C — so the app ' +
-      'checks the outputs against the screen’s own outputCount and ' +
-      'usedOutputCapabilities and draws nothing for a screen that does not add up. ' +
-      'The `$output` paths themselves (`canvas/status/@props/usedInScreenAux`, ' +
-      '`usedInRegion`, `capability`, `mapping/@props/card`, `$plug/@items/1/status/' +
-      '@props/type`) are the store’s spellings and unanswered too: a firmware that ' +
-      'spells them differently costs one E12 per output and the header is absent.',
+      'The dual-outputs capture (from the 2026-09-09 whole-store pull) settled the ' +
+      'paths and the sums — each screen’s one output adds up to its own figures — ' +
+      'but with one output per screen it cannot say which order the links follow ' +
+      'when there are several. That order is the only one the object model offers ' +
+      'and no hardware has confirmed it, so the app checks the outputs against the ' +
+      'screen’s own outputCount and usedOutputCapabilities and draws nothing for a ' +
+      'screen that does not add up. `scripts/probe-hardware.mjs` step 6 flags the ' +
+      'screen that would settle it.',
     setup:
-      'Any screen with outputs assigned out of order — output 9 as its first link, ' +
-      'output 5 as its second — then compare the header with Preconfig > Screens. ' +
-      'This script reads the outputs on every capture from now on.',
-    covered: (c) => Boolean(c.outputs && Object.values(c.outputs).some((o) => /^S\d+$/.test(String(o.screen)))),
+      'A screen with two or more outputs assigned out of number order — output 9 at ' +
+      'the left of the canvas, output 5 next to it — then compare the header’s Out ' +
+      'row with Preconfig > Screens. This script reads the outputs on every capture.',
+    covered: (c) => {
+      const perScreen = new Map();
+      for (const o of Object.values(c.outputs || {})) {
+        if (!/^S\d+$/.test(String(o.screen))) continue;
+        perScreen.set(o.screen, (perScreen.get(o.screen) || 0) + 1);
+      }
+      return [...perScreen.values()].some((n) => n > 1);
+    },
   },
   {
     id: 'vpu-layer-populated',

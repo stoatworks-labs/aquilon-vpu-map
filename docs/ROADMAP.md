@@ -62,6 +62,12 @@ warning.
 
 ## What is left
 
+- **Validate the output header on a box** (2026-09-15). The header names each link's
+  region and output plug; the paths and the sums were confirmed against the 2026-09-09
+  whole-store pull, the **order of a screen's links over several outputs** was not —
+  every screen on that box had one. `docs/CAPTURE-GUIDE.md` → "Validate on real
+  hardware" has the steps; `scripts/probe-hardware.mjs` step 6 does the reading.
+
 **1. A Link capture.** Unlocks `channel`, devices 2–4, and combined VPUs in one
 go — the biggest single step, and the only one needing hardware we do not have.
 

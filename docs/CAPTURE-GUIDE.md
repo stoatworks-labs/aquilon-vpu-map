@@ -27,6 +27,39 @@ the same property of its own transport in `only_ever_sends_get`.)
 It is still around 500 round trips and takes a few seconds. Do not fire it
 mid-cue on a show; between sessions, or on a rehearsal box, is fine.
 
+## Validate on real hardware — next time there is a box
+
+Added 2026-09-15, when the grid gained its header (which region and output plug each
+link is) and its stacked VPUs, with no Aquilon in front of us. Most of it has since been
+checked against the **whole-store pull of 2026-09-09** (`data/aquilon-c-dual-outputs.json`
+is lifted from it): the `$output` objects exist with the expected fields, the
+`$output/@items/<n>/canvas/status/@props/…` prefix answers over AWJ, and each screen's
+outputs add up to its own `outputCount` and `usedOutputCapabilities`. What that pull
+could **not** settle, because every screen on it had one output, is below. Do these in
+order the next time a box is reachable; none of them writes anything.
+
+1. **Run the probe** — `node scripts/probe-hardware.mjs <ip>` — and read step 6. It says
+   which `$output` paths answered over AWJ (the `mapping/@props/{card,physical}`,
+   `control/@props/label` and `$plug/@items/1/status/@props/type` spellings follow the
+   store's naming rule but have never been asked over AWJ), whether every screen adds
+   up, and — the point — it flags any screen whose outputs' **number order is not their
+   canvas order**.
+2. **Give it such a screen**: two or more outputs, assigned out of number order — output
+   9 at the left of the canvas, output 5 next to it. Then compare the header's `Out`
+   row with **Preconfig > Screens** and with the canvas. If the box numbers the screen's
+   links in output-number order the header is right as it stands; if it numbers them in
+   canvas order (or the order the outputs were added), `screenOutputLinks` in
+   `public/vpu.js` must sort that way instead — it is one sort key, and the test in
+   `test/grid.test.js` ("the header deals a screen's links out…") pins the order.
+3. **Record it** — `node scripts/capture-config.mjs <ip> --name output-order` — so the
+   answer is in `data/` and the report stops listing it.
+4. **A screen with two regions**, if there is time: `usedInRegion` has only ever read `1`.
+   The header merges adjacent outputs of one region into a cell; a second region should
+   split it.
+5. **A Link setup**, if there is one: outputs are indexed 1–96 across the four devices
+   and the readers stop at 24, which is right for a master on its own and untested with
+   followers.
+
 ## First, see what is already answered
 
 ```
@@ -59,7 +92,8 @@ commit one.
 
 Since 2026-09-15 a capture also records the **outputs** — which screen, region
 and plug each one is — so the header over the grid's columns can be drawn from
-it. The three captures already in `data/` predate that and have none.
+it. The first three captures in `data/` predate that and have none; the fourth,
+`aquilon-c-dual-outputs.json`, was lifted from a whole-store pull and does.
 
 ---
 
@@ -129,6 +163,13 @@ node scripts/capture-config.mjs <ip> --name link-follower-2 --device 2
 
 Whether `channel` indexes the Link device is a guess — it has read `0` on every
 mixer ever captured. A follower with a populated map settles it.
+
+### 8. The order of a screen's links over its outputs — `--name output-order`
+
+A screen with two or more outputs assigned **out of number order** (output 9 at the
+left of the canvas, output 5 beside it). Everything the header draws rests on the
+screen numbering its links in output-number order, which no box has confirmed; see
+"Validate on real hardware" above for what to compare it with.
 
 ### 7. An 8K layer — `--name capacity-8`
 

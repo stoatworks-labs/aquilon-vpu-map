@@ -577,3 +577,19 @@ patched fetch, Plus via the preview's new "synthesise outputs" box). Plus synced
 EMPTY store for the store-shaped live-resources capture and reporting no VPU — fixed
 on the way.
 
+**Same day, later — the header is part-verified after all.** `~/dev/aquilon-field-test/
+results/store-device-2026-09-09T19-56-34.json` is a whole-store pull of the REAL
+Aquilon C from the 09-09 field test (livepremier-plus README's "verified against real
+hardware" block), and it holds `outputList` with every field the header reads:
+`canvas/status/pp/{usedInScreenAux,usedInRegion,capability}`, `control/pp/label`,
+`mapping/pp/{card,slot,physical}`, `plugList/items/1/status/pp/type`. 96 output slots
+(1-12 fitted; unfitted ones answer `NONE` with isAvailable:false, not E12). That day's
+20-paths run also answered `$output/@items/1/canvas/status/@props/pitchedWidth` over
+AWJ, so the prefix `readOutputs` uses is right. Lifted into
+`data/aquilon-c-dual-outputs.json` (S1 on Out 7, S2 on 8, S3 on 5, one DUAL output
+each, 4K layers — a layer need not match its output's capacity; labels 'LED 1/2'
+dropped) and a trimmed Plus fixture; both suites pin that each screen's one output
+adds up to its own figures. **Still open: the ORDER over several outputs** (every
+screen there had one), and the `mapping`/`control`/`$plug` AWJ spellings. Probe step 6
++ CAPTURE-GUIDE "Validate on real hardware" are the note for the next box.
+

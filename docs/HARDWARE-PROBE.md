@@ -133,6 +133,20 @@ does occupy two scalers — instead of by inference.
 
 ---
 
+### Step 6 — the output header
+
+Added 2026-09-15. Reads every output's screen, region, capability, label, card,
+plug and plug type (`lib/read.js` `readOutputs`) and the screens' resource
+status, then does what the app does with them: deals each screen's links out
+over its outputs and checks the sum against the screen's own `outputCount` and
+`usedOutputCapabilities`. Prints, per screen, which output carries which links and
+whether it adds up — and, reading each output's `left`/`top` on the canvas, warns
+when a screen's outputs' **number order is not their canvas order**. That screen
+is the one that settles the header's assumption; compare its `Out` row with
+Preconfig > Screens. The 2026-09-09 store pull answered the paths and the sums
+(`data/aquilon-c-dual-outputs.json`); the order is still open because every
+screen on that box had one output. Saves `outputs.json`.
+
 ## Worth grabbing while there
 
 Cheap, and expensive to come back for:

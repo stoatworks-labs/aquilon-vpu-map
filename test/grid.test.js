@@ -16,6 +16,7 @@ import {
   capacityToLinks,
   stackVpus,
   screenOutputLinks,
+  diff,
   LINKS_PER_VPU,
   SCALING_ENGINE_BOUNDARY,
 } from '../public/vpu.js';
@@ -247,12 +248,19 @@ test('the device reports headroom and overflow directly', () => {
   }
 });
 
-test('screen names are never committed to the captures', () => {
+/* ---------- fourth real configuration: single-output screens, WITH the outputs ---------- */
+
+const duals = JSON.parse(
+  fs.readFileSync(path.join(HERE, '..', 'data', 'aquilon-c-dual-outputs.json'), 'utf8'),
+);
+
+test('screen names and output labels are never committed to the captures', () => {
   // They are show data — the live view only. Guard it, because a capture
   // refreshed from a live read would otherwise carry them in silently.
-  for (const snap of [snapshot, sixOut, optimized]) {
+  for (const snap of [snapshot, sixOut, optimized, duals]) {
     assert.equal(snap.screens, undefined, `${snap.note?.slice(0, 24)}… has no screen names`);
     assert.equal(snap.source.host, 'redacted');
+    for (const o of Object.values(snap.outputs || {})) assert.equal(o.label, undefined, 'no output labels');
   }
 });
 
@@ -562,6 +570,45 @@ test('the header deals a screen’s links out over its outputs, in output order'
   // table is taken as read.
   assert.equal(screenOutputLinks(outputs).get('S4').consistent, true);
   assert.equal(screenOutputLinks(undefined).size, 0);
+});
+
+test('the header holds on the real outputs: each screen’s one output is its one link', () => {
+  // The dual-outputs capture is lifted from the whole-store pull of the real
+  // Aquilon C on 2026-09-09 — the only hardware reading of the outputs. Three
+  // screens, one dual-link HDMI output each, and the device's own figures agree
+  // with the accounting: this is the paths and the sums settled on hardware.
+  // With one output per screen it says nothing about the ORDER of several.
+  const links = screenOutputLinks(duals.outputs, duals.screenStatus.current);
+  assert.deepEqual(
+    [...links.entries()].map(([s, v]) => [s, v.consistent, v.links, v.runs.map((r) => [r.output, r.region, r.capability, r.type, r.card, r.physical, r.first, r.last])]),
+    [
+      ['S3', true, 1, [['5', '1', 'DUAL', 'HDMI', 'OUT_2', '5', 1, 1]]],
+      ['S1', true, 1, [['7', '1', 'DUAL', 'HDMI', 'OUT_2', '7', 1, 1]]],
+      ['S2', true, 1, [['8', '1', 'DUAL', 'HDMI', 'OUT_2', '8', 1, 1]]],
+    ],
+  );
+  // The auxes on the SDI card cost no VPU and get no header.
+  for (const n of ['1', '2', '3', '4']) assert.match(duals.outputs[n].screen, /^A\d$/);
+  assert.equal(links.has('A1'), false);
+
+  // The grid agrees: every screen's one link is its column, and a 4K layer on a
+  // dual-link output is two rows tall on one column — a layer need not match the
+  // capacity of the output it feeds.
+  for (const g of gridOf(duals)) {
+    for (const sc of g.screens) assert.deepEqual([sc.width, sc.outputs], [1, [1]]);
+    for (const b of g.blocks) assert.deepEqual([b.height, b.cols.length], [2, 1], `${b.mixer}`);
+  }
+  assert.deepEqual(gridOf(duals).filter((g) => g.fitted).map((g) => g.rowsUsed), [4, 2]);
+  assert.deepEqual(stackVpus(gridOf(duals)), [[1], [2], [3], [4]], 'nothing continues');
+
+  // The staged side is the same kind of change the optimized capture showed:
+  // S2's link moves from pipe 3 to pipe 2, nothing else.
+  const changed = diff(duals.current, duals.new);
+  assert.ok(changed.length, 'the staged side differs');
+  for (const c of changed) {
+    assert.equal(duals.current[c.mixer].usedInScreen, 'S2');
+    assert.ok(c.changed.every((d) => d.prop.startsWith('link ')), `${c.mixer}: links only`);
+  }
 });
 
 test('the reported pipe keys are not the columns', () => {

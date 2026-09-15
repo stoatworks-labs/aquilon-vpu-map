@@ -127,12 +127,16 @@ for one, taking further links on the next VPU; it has never been captured and is
 detected — a screen on different links of a later VPU is left alone.
 
 **The header's link-to-output order is an assumption.** `screenOutputLinks()` deals a
-screen's links over its outputs in output-number order, two per 4K output. No hardware
-has confirmed that, and the `$output` paths it is read from (`lib/read.js`
-`readOutputs`, `read.rs` `outputs`) are the store's spellings, never answered by a
-device. So it is checked against the screen's own `outputCount` and
-`usedOutputCapabilities`, and a screen that does not add up gets no header. Do not
-loosen that check to make a capture look complete.
+screen's links over its outputs in output-number order, two per 4K output. The `$output`
+fields it reads exist on a real box — `data/aquilon-c-dual-outputs.json` is lifted from
+the 2026-09-09 whole-store pull, and the `canvas/status/@props` prefix answered over
+AWJ that day — and each screen's outputs add up to its own figures there. But every
+screen on that box had ONE output, so the order over several is unconfirmed, and the
+`mapping`/`control`/`$plug` spellings have not been asked over AWJ (`lib/read.js`
+`readOutputs`, `read.rs` `outputs`). So it is checked against the screen's own
+`outputCount` and `usedOutputCapabilities`, and a screen that does not add up gets no
+header. Do not loosen that check to make a capture look complete. Next box:
+`docs/CAPTURE-GUIDE.md` → "Validate on real hardware"; `probe-hardware.mjs` step 6.
 
 **`$vpuLayer` does not exist on hardware.** It answers `E12`, as does `$pipe`. Both are
 present-but-permanently-empty on the *simulator*. This is the general lesson:

@@ -87,8 +87,9 @@ follows the manual's own figures, read top to bottom the way an output link runs
   "continues from VPU 1" on the arriving card.
 - **The header names each link.** The screen bar is always there. On a live read, two rows under
   it say which **region** and which **output plug** each link is — `R1`, `Out 5` — with the
-  output's label, connector type and card in the tooltip. A 4K output is two links wide. The
-  recorded captures predate this and carry no outputs, so on those the header stops at the screen.
+  output's label, connector type and card in the tooltip. A 4K output is two links wide. Of the
+  recorded captures only the fourth carries the outputs; on the other three the header stops at
+  the screen.
 
 ### Why the columns are not what the device's keys say
 
@@ -107,15 +108,16 @@ this tool's choice, and it follows the device's own mixer allocation order.
 
 Nothing names the output behind a link either. The header takes that from the outputs themselves —
 each says which screen and region it is in, and its capacity — dealt out over the screen's links in
-**output-number order**. That order is the only one the object model offers and no hardware has
-confirmed it, so the tool checks the outputs against the screen's own output count and capability
-figures and draws no header for a screen that does not add up.
+**output-number order**. The paths and the sums hold on a real box; the order is the only one the
+object model offers and no box has yet confirmed it, because every screen read so far had a single
+output. So the tool checks the outputs against the screen's own output count and capability figures
+and draws no header for a screen that does not add up.
 
 ---
 
 ## Working without a device
 
-Three recorded configurations ship with it, and they are **the whole ground truth**. Every one is
+Four recorded configurations ship with it, and they are **the whole ground truth**. Every one is
 offered in the app's **Recorded capture** picker, and the tests run off them.
 
 ```
@@ -124,7 +126,7 @@ node scripts/capture-config.mjs --report
 
 audits them with no device needed: what each capture proves, and **which questions none of them can
 answer** — a capacity-1 layer, an over-budget configuration, Cut & Fill actually enabled, a screen
-too wide for one VPU.
+too wide for one VPU, the order of a screen's links over several outputs.
 
 If you have hardware and want to settle one of those, [CAPTURE-GUIDE.md](CAPTURE-GUIDE.md) assumes
 nothing: what to set up, what to run, and what it settles. Recording one is:

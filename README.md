@@ -110,9 +110,10 @@ read top to bottom the way an output link runs through it:
   `↓ VPU 2` under the leaving ones. (This is not §5.5.5's *combined* VPU, which is a
   screen too wide for one; that has never been captured.)
 - **The header names each link.** The screen bar over the columns is always there. On
-  a live read, or a capture that carries the outputs, two rows under it say which
-  **region** and which **output plug** each link is — `R1`, `Out 5` — with the label,
-  connector type and card in the tooltip. A 4K output is two links wide.
+  a live read, or a capture that carries the outputs (the fourth one does), two rows
+  under it say which **region** and which **output plug** each link is — `R1`, `Out 5`
+  — with the label, connector type and card in the tooltip. A 4K output is two links
+  wide.
 
 > **The columns come from the values, not the keys.**
 >
@@ -129,10 +130,14 @@ read top to bottom the way an output link runs through it:
 >
 > Nothing names the output behind a link either. The header gets that from the outputs
 > themselves — each says which screen and region it is in, and its capacity — dealt out
-> over the screen's links **in output-number order**, two per 4K output. That order is
-> the only one the object model offers and no hardware has confirmed it, so it is
-> checked against the screen's own `outputCount` and `usedOutputCapabilities`: a
-> screen whose outputs do not add up gets no header rather than a wrong one.
+> over the screen's links **in output-number order**, two per 4K output. The paths and
+> the sums hold on a real box (the fourth capture is lifted from a whole-store pull of
+> 2026-09-09); the *order* is the only one the object model offers and no box has yet
+> confirmed it, because every screen read so far had one output. So it is checked
+> against the screen's own `outputCount` and `usedOutputCapabilities`, and a screen
+> whose outputs do not add up gets no header rather than a wrong one.
+> [docs/CAPTURE-GUIDE.md](docs/CAPTURE-GUIDE.md) says what to do the next time a box
+> is reachable.
 >
 > `$vpuLayer`, which looked like the reported grid, **does not exist on hardware** — it
 > answers `E12`, as does `$pipe`. Both are present but permanently empty on the

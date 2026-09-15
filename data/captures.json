@@ -1,23 +1,29 @@
 {
-  "$comment": "The recorded captures the app offers, newest configuration last. Written by scripts/capture-config.mjs; hand-editable. Everything here is redacted — no host, no screen names.",
+  "$comment": "The recorded captures the app offers, newest configuration last. Written by scripts/capture-config.mjs; hand-editable. Everything here is redacted \u2014 no host, no screen names.",
   "captures": [
     {
       "id": "snapshot",
       "file": "aquilon-c-snapshot.json",
-      "label": "Base — four screens, no layers on VPU 1",
+      "label": "Base \u2014 four screens, no layers on VPU 1",
       "summary": "All 16 mixers of VPU 1 are native backgrounds. The staged mapping differs from the running one, so this is the capture that exercises the diff."
     },
     {
       "id": "6output-5k",
       "file": "aquilon-c-6output-5k.json",
       "label": "Six-output screen + a 5K layer",
-      "summary": "The manual's §5.5.4 figure: S1 owns output links 1-6 and each of its layers covers 1-4 then wraps onto 5-6. S2's native is 5K, four layer links tall. VPU 1 is exactly 8/8 both ways."
+      "summary": "The manual's \u00a75.5.4 figure: S1 owns output links 1-6 and each of its layers covers 1-4 then wraps onto 5-6. S2's native is 5K, four layer links tall. VPU 1 is exactly 8/8 both ways."
     },
     {
       "id": "optimized",
       "file": "aquilon-c-optimized.json",
       "label": "Optimized mode",
       "summary": "S1 reports isOptimized, so the centre-line boundary is lifted for its capacity-2 layers and their bars run unbroken. The only capture carrying screenStatus, and so the device's own headroom figures."
+    },
+    {
+      "id": "dual-outputs",
+      "file": "aquilon-c-dual-outputs.json",
+      "label": "Three single-output screens \u2014 with the outputs",
+      "summary": "Lifted from the whole-store pull of 2026-09-09: S1, S2 and S3 each on one dual-link HDMI output (7, 8 and 5) with a native and a 4K layer, auxes on the SDI card. The only capture that carries the outputs, so the header over the columns names each link's region and plug here \u2014 one link per screen, which cannot test the link order."
     }
   ]
 }

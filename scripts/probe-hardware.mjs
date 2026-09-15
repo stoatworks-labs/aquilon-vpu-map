@@ -24,7 +24,8 @@ import path from 'node:path';
 import net from 'node:net';
 
 import { AwjClient } from '../lib/awj.js';
-import { MIXER_IDS } from '../public/vpu.js';
+import { MIXER_IDS, screenOutputLinks } from '../public/vpu.js';
+import { readOutputs, readScreenStatus } from '../lib/read.js';
 
 const arg = process.argv[2];
 const outIdx = process.argv.indexOf('--out');
@@ -65,11 +66,11 @@ await fs.mkdir(OUT, { recursive: true });
 /* default. Steps 2-5 answer the usual questions on their own.           */
 /* ------------------------------------------------------------------ */
 
-log(`\n[1/5] GET ${httpBase}/api/stores/device`);
+log(`\n[1/6] GET ${httpBase}/api/stores/device`);
 let store = null;
 if (!wantStore) {
   log('    skipped — pass --store to include it (~124 MB, see the header note).');
-  log('    Steps 2-5 do not need it.');
+  log('    Steps 2-6 do not need it.');
 } else try {
   const res = await fetch(`${httpBase}/api/stores/device`, {
     headers: { accept: 'application/json' },
@@ -88,7 +89,7 @@ if (!wantStore) {
   }
 } catch (err) {
   log(`    ✗ failed: ${err.message}`);
-  log('      (if this fails, steps 2-5 still stand on their own)');
+  log('      (if this fails, steps 2-6 still stand on their own)');
 }
 
 /* What sits alongside vpuMixerList? The answer differs by implementation:
@@ -128,7 +129,7 @@ if (store) {
 /* simulator as "no ACAO"; confirm on the box.                          */
 /* ------------------------------------------------------------------ */
 
-log(`\n[2/5] CORS check (does a hosted page stand any chance?)`);
+log(`\n[2/6] CORS check (does a hosted page stand any chance?)`);
 for (const p of ['/api/stores/device', '/api/device/snapshots/inputs/1']) {
   try {
     const res = await fetch(`${httpBase}${p}`, {
@@ -154,7 +155,7 @@ await new Promise((resolve) => {
 /* E12 is a free path-existence oracle.                                 */
 /* ------------------------------------------------------------------ */
 
-log(`\n[3/5] AWJ path-existence sweep on ${host}:10606`);
+log(`\n[3/6] AWJ path-existence sweep on ${host}:10606`);
 const M = 'DeviceObject/preconfig/resources/current/status/mapping/$device/@items/1';
 const R = 'DeviceObject/preconfig/resources/current';
 
@@ -215,7 +216,7 @@ try {
   /* On the captured Aquilon C every mixer read channel=0; if a busier  */
   /* box shows channel varying, channel is likely the grid row.         */
   /* ---------------------------------------------------------------- */
-  log(`\n[4/5] Re-reading the mixer table (channel/slice distribution)`);
+  log(`\n[4/6] Re-reading the mixer table (channel/slice distribution)`);
   const mixers = {};
   for (const id of MIXER_IDS) {
     const b = `${M}/$vpuMixer/@items/${id}`;
@@ -267,7 +268,7 @@ try {
   /* these populate on hardware, the grid view is reported data rather  */
   /* than a derived guess.                                              */
   /* ---------------------------------------------------------------- */
-  log(`\n[5/5] Reading the $vpuLayer link grid (32 scalers x 8 pipes)`);
+  log(`\n[5/6] Reading the $vpuLayer link grid (32 scalers x 8 pipes)`);
   const scalers = {};
   for (let p = 1; p <= 4; p++) {
     for (let s = 1; s <= 8; s++) {
@@ -321,6 +322,71 @@ try {
     log('    On hardware this collection does not exist at all (E12); on the simulator');
     log('    it exists but is permanently empty. Either way it is not the grid.');
     log('    Columns come from mixerAllocation.usedOnOutPipe1..8 instead — see step 4.');
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* STEP 6 — THE OUTPUT HEADER, WHICH NO HARDWARE HAS ANSWERED YET.    */
+  /*                                                                    */
+  /* Added 2026-09-15 after the Aquilon C was gone. The header over the */
+  /* grid's columns names each link's region and output plug from       */
+  /* `$output/@items/<n>/…` paths spelt from the device store, and deals */
+  /* a screen's links over its outputs in OUTPUT-NUMBER ORDER. Neither   */
+  /* the spellings nor the order has been seen answered by a box. This   */
+  /* step settles both, or says exactly what is still open.              */
+  /* ---------------------------------------------------------------- */
+
+  log(`\n[6/6] The output header — do the $output paths answer, and do the outputs add up?`);
+  const outputs = await readOutputs(client);
+  const status = await readScreenStatus(client, { which: 'current' });
+  await save('outputs.json', outputs);
+  const assigned = Object.entries(outputs).filter(([, o]) => /^S\d+$/.test(String(o.screen)));
+  if (!Object.keys(outputs).length) {
+    log('    ✗ no $output/@items/<n>/canvas/status/@props/usedInScreenAux answered at all.');
+    log('      The header paths are spelt wrongly for this firmware. Find the right');
+    log('      spelling in /api/stores/device (--store) under outputList, and fix');
+    log('      OUTPUT_PROPS in lib/read.js and read.rs together.');
+  } else {
+    log(`    ✓ ${Object.keys(outputs).length} outputs answered, ${assigned.length} assigned to a screen`);
+    const missing = ['region', 'capability', 'card', 'physical', 'type'].filter(
+      (k) => assigned.length && !assigned.some(([, o]) => o[k] !== undefined),
+    );
+    if (missing.length) log(`    ? no output answered ${missing.join(', ')} — those paths are misspelt for this firmware`);
+
+    // Where each assigned output sits on its screen's canvas: if the outputs'
+    // NUMBER order is not their canvas order, the header's assumption is exposed
+    // — compare it with Preconfig > Screens and settle which order the screen's
+    // links follow.
+    for (const [n, o] of assigned) {
+      const b = `DeviceObject/$output/@items/${n}/canvas/status/@props`;
+      o.left = await client.tryGet(`${b}/left`);
+      o.top = await client.tryGet(`${b}/top`);
+    }
+    const links = screenOutputLinks(outputs, status);
+    for (const [screen, info] of links) {
+      const st = status[screen] || {};
+      const runs = info.runs.map((r) => `Out ${r.output} R${r.region ?? '?'} links ${r.first}-${r.last}` +
+        (outputs[r.output].left !== undefined ? ` @${outputs[r.output].left},${outputs[r.output].top}` : ''));
+      log(`    ${screen}: ${runs.join(' · ')}`);
+      log(`        ${info.consistent ? '✓' : '✗'} ${info.runs.length} output(s), ${info.links} link(s)` +
+        ` vs the screen's outputCount ${st.outputCount ?? '?'} and usedOutputCapabilities ${st.usedOutputCapabilities ?? '?'}` +
+        (info.consistent ? '' : ' — DOES NOT ADD UP: the header is withheld for this screen'));
+      const byNumber = info.runs.map((r) => r.output);
+      const byCanvas = [...info.runs]
+        .filter((r) => outputs[r.output].left !== undefined)
+        .sort((a, b) => (outputs[a.output].top - outputs[b.output].top) || (outputs[a.output].left - outputs[b.output].left))
+        .map((r) => r.output);
+      if (byCanvas.length === byNumber.length && byCanvas.join() !== byNumber.join()) {
+        log(`        ⚠ canvas order ${byCanvas.join(',')} differs from output order ${byNumber.join(',')} —`);
+        log('          THIS is the screen that settles the header: compare its Out row with');
+        log('          Preconfig > Screens and record which order the links follow.');
+      } else if (byCanvas.length > 1) {
+        log('        (canvas order agrees with output order, so this screen cannot tell the two apart)');
+      }
+    }
+    if (![...links.values()].some((i) => i.runs.length > 1)) {
+      log('    No screen here has more than one output, so the link ORDER is still untested —');
+      log('    it needs a multi-output screen whose outputs are assigned out of number order.');
+    }
   }
 } catch (err) {
   log(`    ✗ ${err.message}`);

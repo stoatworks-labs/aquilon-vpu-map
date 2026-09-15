@@ -25,9 +25,16 @@ below it and the rest down the field. The model's row numbering is unchanged.
   under the screen bar read `R1` and `Out 5`, with the rest in the tooltip. **The order is
   an assumption** the Aquilon C never got to confirm, so it is checked against the
   screen's own `outputCount` and `usedOutputCapabilities`; a screen whose outputs do not
-  add up gets no header rather than a wrong one. The three recorded captures predate the
-  read and carry no outputs, so on those the header stops at the screen; the capture
-  report lists the out-of-order screen that would settle the question.
+  add up gets no header rather than a wrong one. The first three recorded captures
+  predate the read and carry no outputs, so on those the header stops at the screen.
+- **A fourth recorded capture, with the outputs.** `aquilon-c-dual-outputs.json` is
+  lifted from the whole-store pull of the real Aquilon C on 2026-09-09: three
+  single-output screens on dual-link HDMI outputs (S1 on 7, S2 on 8, S3 on 5), auxes on
+  the SDI card. It settles the header's paths and sums on hardware — one output per
+  screen, so not the order of several. `scripts/probe-hardware.mjs` gained a sixth step
+  that reads the outputs off a box, checks every screen adds up, and flags a screen
+  whose outputs' number order is not their canvas order — the one that would settle it.
+  The capture guide has the checklist for the next box.
 
 ## 1.2.0 — 2026-08-21
 
