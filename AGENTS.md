@@ -112,8 +112,27 @@ the first row where the columns were free — which put three different layers o
 link 1 of the captured VPU 1. It cannot happen; do not reintroduce it.
 
 **A screen's native layer is not layer capacity.** It is reported like a layer and holds
-mixers, but it spends output capacity only, so it is drawn in a band below the eight
-links and left out of `rowsUsed`.
+mixers, but it spends output capacity only, so it is drawn in a band of its own and left
+out of `rowsUsed`. The band goes **above** the eight links: an output link runs down
+through the VPU and the native is the bottom of the stack, so it is the first thing on
+the link. The model's rows for it still start at `LINKS_PER_VPU`; that is an id space,
+not a position.
+
+**A screen continuing on another VPU is not §5.5.5.** When a VPU's sixteen mixers are
+spent, a screen's next layer lands on the next VPU on the *same* output links (S3 in
+the base capture, S2 in the optimized one). `buildLinkGrid()` records it as `from`/`to`
+on the `screens` entries, keeps the screen on the columns it had upstream, and
+`stackVpus()` says which cards to stack. §5.5.5's *combined* VPU is a screen too WIDE
+for one, taking further links on the next VPU; it has never been captured and is not
+detected — a screen on different links of a later VPU is left alone.
+
+**The header's link-to-output order is an assumption.** `screenOutputLinks()` deals a
+screen's links over its outputs in output-number order, two per 4K output. No hardware
+has confirmed that, and the `$output` paths it is read from (`lib/read.js`
+`readOutputs`, `read.rs` `outputs`) are the store's spellings, never answered by a
+device. So it is checked against the screen's own `outputCount` and
+`usedOutputCapabilities`, and a screen that does not add up gets no header. Do not
+loosen that check to make a capture look complete.
 
 **`$vpuLayer` does not exist on hardware.** It answers `E12`, as does `$pipe`. Both are
 present-but-permanently-empty on the *simulator*. This is the general lesson:

@@ -80,8 +80,9 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 ![Each VPU as an 8x8 field of links](docs/link-grid.png)
 
 The manual draws a VPU as an **8×8 field of links** — eight layer links in from the
-left, eight output links out through the top and bottom (User Manual v6.2 §5.5). It is
-a crosspoint field, and the view follows the manual's own figures:
+left, eight output links in through the top and out through the bottom (User Manual
+v6.2 §5.5). It is a crosspoint field, and the view follows the manual's own figures,
+read top to bottom the way an output link runs through it:
 
 - **A row is one layer-capacity link, and it carries one layer.** Two layers never
   share a row. A layer is as tall as its capacity: dual link (up to 4K30) is 1, 4K60
@@ -97,8 +98,21 @@ a crosspoint field, and the view follows the manual's own figures:
 - **Optimized mode lifts that boundary for capacity-2 layers, and only those** (§5.5.6),
   so on an optimized VPU their bars run unbroken across the centre line.
 - **A screen's native background is not layer capacity.** It is reported like a layer
-  and holds mixers, but it is drawn dimmed in a band below the field and left out of
-  the layer-link count.
+  and holds mixers, but it is drawn dimmed in a band of its own, **above** the field,
+  and left out of the layer-link count: the native is the bottom of the stack, so it is
+  the first thing on the output link, with layer 1 composited over it and the rest down
+  the field.
+- **A screen that runs out of mixers continues on the next VPU.** Its next layer is
+  allocated there on the *same* output links — the base capture has S3's native on
+  VPU 1 and its layer 1 on VPU 2 — so the link runs out of the bottom of one VPU and
+  into the top of the next. Those two cards are **stacked**, the screen keeps the same
+  columns on both, and the leaving and arriving arrows take the screen's colour, with
+  `↓ VPU 2` under the leaving ones. (This is not §5.5.5's *combined* VPU, which is a
+  screen too wide for one; that has never been captured.)
+- **The header names each link.** The screen bar over the columns is always there. On
+  a live read, or a capture that carries the outputs, two rows under it say which
+  **region** and which **output plug** each link is — `R1`, `Out 5` — with the label,
+  connector type and card in the tooltip. A 4K output is two links wide.
 
 > **The columns come from the values, not the keys.**
 >
@@ -112,6 +126,13 @@ a crosspoint field, and the view follows the manual's own figures:
 > Nothing names the layer link — the row — at all. It does not need to: the rules above
 > fix how many links each layer spends and forbid sharing, so only the order down the
 > field is ours, and it follows the device's own mixer allocation order.
+>
+> Nothing names the output behind a link either. The header gets that from the outputs
+> themselves — each says which screen and region it is in, and its capacity — dealt out
+> over the screen's links **in output-number order**, two per 4K output. That order is
+> the only one the object model offers and no hardware has confirmed it, so it is
+> checked against the screen's own `outputCount` and `usedOutputCapabilities`: a
+> screen whose outputs do not add up gets no header rather than a wrong one.
 >
 > `$vpuLayer`, which looked like the reported grid, **does not exist on hardware** — it
 > answers `E12`, as does `$pipe`. Both are present but permanently empty on the

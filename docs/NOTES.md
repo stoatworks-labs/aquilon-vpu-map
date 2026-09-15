@@ -541,3 +541,39 @@ against the repo's scripted stand-in device, so it stays honest with no box.
 
 
 **On the site since 2026-08-22** at `/software/aquilon-vpu-map/`, and as a member of the new `/analog-way/` family page — see [analog way page](https://github.com/stoatworks-labs/stoatworks-website/blob/main/docs/NOTES.md) (`stoatworks-website`). `docs/screenshot.png` is registered in the website's `scripts/shots.json` as its hero. Not hosted: there is no subdomain, and there should not be — it reads a frame on your network.
+
+## THE GRID READS DOWN THE OUTPUT LINK — natives above, continuing screens stacked, 2026-09-15
+
+Allan asked for three things at once: the native band above the field, the VPUs a
+screen cascades across laid out as a vertical stack "so the output links make sense",
+and a header naming each link's screen, region and plug. The first two are one idea:
+**an output link runs down through a VPU**, in at the top, out at the bottom, and the
+native is the bottom of the compositing stack — the first thing on the link — so it
+belongs at the top, layer 1 under it, and when the screen's next layer is on another
+VPU (S3 in the base capture, S2 in the optimized one — same links, next board) the link
+carries on into that VPU's card underneath. `buildLinkGrid` records `from`/`to` on the
+`screens` entries and keeps the continuing screen on its upstream columns (other
+screens first-fit around it — with nothing continuing that is the old side-by-side
+order exactly); `stackVpus` groups the cards. **This is NOT §5.5.5's combined VPU**
+(a screen too WIDE for one, further links on the next board): a screen on *different*
+links of a later VPU is deliberately not a continuation, and that case is still
+uncaptured. The card caption moved to the top so "VPU 2" sits where the arrows point;
+the page grid is `grid-auto-flow: dense` with the stack spanning rows.
+
+**The header is the first thing here built on paths no hardware has answered.**
+`readOutputs` (lib/read.js, mirrored in read.rs) walks `$output/@items/1..24` for
+`canvas/status/@props/{usedInScreenAux,usedInRegion,capability}`,
+`control/@props/label`, `mapping/@props/{card,physical}` and
+`$plug/@items/1/status/@props/type` — the store's spellings from the Plus fixtures,
+the same correspondence every verified path follows, every read a tryGet so a
+different firmware spelling just costs E12s and drops the header. The link→output
+order (`screenOutputLinks`: output-number order, `capacityToLinks` links each) is
+the only order the object model offers; it is checked against `outputCount` and
+`usedOutputCapabilities` and a screen that does not add up gets no header. The
+report lists it as the `output-header` gap. The three captures carry no `outputs`,
+so the header was only ever seen with an invented table (the standalone via a
+patched fetch, Plus via the preview's new "synthesise outputs" box). Plus synced
+(`5936339`), same three changes ported; its `tools/preview.html` had been building an
+EMPTY store for the store-shaped live-resources capture and reporting no VPU — fixed
+on the way.
+

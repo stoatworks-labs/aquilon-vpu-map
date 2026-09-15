@@ -1099,7 +1099,20 @@ els.form.addEventListener('submit', async (e) => {
 els.sampleBtn.addEventListener('click', loadSample);
 
 (async function init() {
-  await loadCaptureIndex();
+  const indexed = await loadCaptureIndex();
+  // `?capture=<id>` opens the page straight onto a recorded capture — the id
+  // from data/captures.json, or its file name — so a view can be linked to and
+  // the screenshots in docs/ are reproducible.
+  const wanted = new URLSearchParams(location.search).get('capture');
+  if (wanted && indexed) {
+    const option = [...els.sample.options].find(
+      (o) => o.value === `./data/${wanted}` || o.value === `./data/aquilon-c-${wanted}.json`,
+    );
+    if (option) {
+      els.sample.value = option.value;
+      await loadSample();
+    }
+  }
   if (isDesktop()) {
     const note = document.getElementById('connNote');
     if (note) {

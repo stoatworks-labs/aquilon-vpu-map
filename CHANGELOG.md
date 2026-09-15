@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased
+
+**The grid reads top to bottom the way an output link runs.** An output link goes in
+at the top of a VPU and out at the bottom, and a screen's native background is the
+bottom of its stack — the first thing on the link. The band was drawn under the field,
+which read the wrong way up; it now sits **above** the eight layer links, with layer 1
+below it and the rest down the field. The model's row numbering is unchanged.
+
+- **A screen that runs out of mixers continues on the next VPU, and the cards stack.**
+  When a VPU's sixteen mixers are spent the screen's next layer is allocated on the next
+  VPU on the *same* output links — the base capture has S3's native on VPU 1 and its
+  layer 1 on VPU 2, the optimized one S2's layer 2 on VPU 2. `buildLinkGrid` now records
+  that on the screen entries (`from` / `to`), keeps the continuing screen on the columns
+  it had upstream so the link draws straight down, and `stackVpus` groups the VPUs; the
+  page stacks those cards in signal order, colours the leaving and arriving arrows in the
+  screen's colour, writes `↓ VPU 2` under the leaving ones and "S3 continues from VPU 1"
+  on the arriving card. A screen on *other* links of a later VPU — §5.5.5's wider screen —
+  is left alone. The card's caption now heads it, so "VPU 2" sits where the links point.
+- **A header over the columns names each link's region and output plug.** The readers
+  (Node bridge, desktop app and the capture script) now read every output's screen,
+  region, capability, label, card, plug and plug type, and `screenOutputLinks` deals a
+  screen's links out over its outputs in output order, two per 4K output, so two rows
+  under the screen bar read `R1` and `Out 5`, with the rest in the tooltip. **The order is
+  an assumption** the Aquilon C never got to confirm, so it is checked against the
+  screen's own `outputCount` and `usedOutputCapabilities`; a screen whose outputs do not
+  add up gets no header rather than a wrong one. The three recorded captures predate the
+  read and carry no outputs, so on those the header stops at the screen; the capture
+  report lists the out-of-order screen that would settle the question.
+
 ## 1.2.0 — 2026-08-21
 
 **The desktop app could not see the network once it was double-clicked.** Since

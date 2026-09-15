@@ -51,10 +51,15 @@ node scripts/capture-config.mjs 192.168.2.140 --name capacity-1 --label "Dual-li
 That writes `data/aquilon-<dev>-capacity-1.json` and adds it to the app's capture
 picker. Commit it, or send the file back — it is self-contained.
 
-**Screen names are dropped, and the address is written as `redacted`.** These
-files ship in a public repo, so the operator's names for their screens ("Main
-LED", a client's name) are show data and never go in. `--keep-names` overrides
-that for a capture you are keeping to yourself; do not commit one.
+**Screen names and output labels are dropped, and the address is written as
+`redacted`.** These files ship in a public repo, so the operator's names for their
+screens and outputs ("Main LED", a client's name) are show data and never go in.
+`--keep-names` overrides that for a capture you are keeping to yourself; do not
+commit one.
+
+Since 2026-09-15 a capture also records the **outputs** — which screen, region
+and plug each one is — so the header over the grid's columns can be drawn from
+it. The three captures already in `data/` predate that and have none.
 
 ---
 

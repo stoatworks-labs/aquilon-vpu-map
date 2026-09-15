@@ -63,8 +63,8 @@ are live-only; the recorded captures are redacted.
 ![Each VPU as an 8x8 field of links](link-grid.png)
 
 The manual draws a VPU as an **8×8 field of links** — eight layer links in from the left, eight
-output links out through the top and bottom. It is a crosspoint field, and this view follows the
-manual's own figures:
+output links in through the top and out through the bottom. It is a crosspoint field, and this view
+follows the manual's own figures, read top to bottom the way an output link runs through it:
 
 - **A row is one layer-capacity link, and it carries one layer.** Two layers never share a row. A
   layer is as tall as its capacity: dual link (up to 4K30) is 1, 4K60 is 2, 5K60 is 4.
@@ -77,7 +77,18 @@ manual's own figures:
 - **Optimized mode lifts that boundary for capacity-2 layers, and only those**, so on an optimized
   VPU their bars run unbroken across the centre line.
 - **A screen's native background is not layer capacity.** It is reported like a layer and holds
-  mixers, but it is drawn dimmed in a band below the field and left out of the layer-link count.
+  mixers, but it is drawn dimmed in a band of its own, **above** the field, and left out of the
+  layer-link count: the native is the bottom of the stack, so it is the first thing on the output
+  link, with layer 1 over it and the rest down the field.
+- **A screen that runs out of mixers continues on the next VPU.** Its next layer is allocated
+  there on the *same* output links, so the link runs out of the bottom of one VPU and into the
+  top of the next. Those two cards are **stacked**, the screen keeps the same columns on both, and
+  the arrows at both ends take the screen's colour, with `↓ VPU 2` under the leaving ones and
+  "continues from VPU 1" on the arriving card.
+- **The header names each link.** The screen bar is always there. On a live read, two rows under
+  it say which **region** and which **output plug** each link is — `R1`, `Out 5` — with the
+  output's label, connector type and card in the tooltip. A 4K output is two links wide. The
+  recorded captures predate this and carry no outputs, so on those the header stops at the screen.
 
 ### Why the columns are not what the device's keys say
 
@@ -93,6 +104,12 @@ the centre line, which the hardware cannot do.** So the view uses the values.
 Nothing in the protocol names the layer link — the row — at all. It does not need to: the rules
 above fix how many links each layer spends and forbid sharing, so only the order down the field is
 this tool's choice, and it follows the device's own mixer allocation order.
+
+Nothing names the output behind a link either. The header takes that from the outputs themselves —
+each says which screen and region it is in, and its capacity — dealt out over the screen's links in
+**output-number order**. That order is the only one the object model offers and no hardware has
+confirmed it, so the tool checks the outputs against the screen's own output count and capability
+figures and draws no header for a screen that does not add up.
 
 ---
 
