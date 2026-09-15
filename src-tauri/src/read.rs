@@ -93,6 +93,51 @@ pub fn screen_status(a: &mut Awj, which: &str) -> Value {
     Value::Object(out)
 }
 
+/// What is read off each output, after which screen it is in — the header over
+/// the grid's columns. Store spellings (`outputList` is `$output`, `plugList` is
+/// `$plug`), the same correspondence the mixer paths follow, but unlike those
+/// never yet answered by hardware: every read is a try_get, so a firmware that
+/// spells them differently costs one E12 per output and the header is absent.
+const OUTPUT_PROPS: [(&str, &str); 6] = [
+    ("region", "canvas/status/@props/usedInRegion"),
+    ("capability", "canvas/status/@props/capability"),
+    ("label", "control/@props/label"),
+    ("card", "mapping/@props/card"),
+    ("physical", "mapping/@props/physical"),
+    ("type", "$plug/@items/1/status/@props/type"),
+];
+
+/// Every output the device has, and which screen, region and plug it is. An
+/// output assigned to no screen (or to an aux, which costs no VPU) is one read.
+pub fn outputs(a: &mut Awj) -> Value {
+    let mut out = Map::new();
+    for i in 1..=24 {
+        let b = format!("DeviceObject/$output/@items/{i}");
+        let screen = match a.try_get(&format!("{b}/canvas/status/@props/usedInScreenAux")) {
+            None => continue, // not fitted, or not this firmware's spelling
+            Some(v) => v,
+        };
+        let mut rec = Map::new();
+        let assigned = screen
+            .as_str()
+            .map(|s| s.len() > 1 && s.starts_with('S') && s[1..].chars().all(|c| c.is_ascii_digit()))
+            .unwrap_or(false);
+        rec.insert("screen".into(), screen);
+        if assigned {
+            for (key, rel) in OUTPUT_PROPS.iter() {
+                if let Some(v) = a.try_get(&format!("{b}/{rel}")) {
+                    if v.is_null() || v.as_str() == Some("") {
+                        continue;
+                    }
+                    rec.insert((*key).into(), v);
+                }
+            }
+        }
+        out.insert(i.to_string(), Value::Object(rec));
+    }
+    Value::Object(out)
+}
+
 /// One side of the mapping. `None` means the device has no `$vpuMixer`
 /// collection at all — the simulator behaves this way.
 pub fn mapping_side(a: &mut Awj, which: &str, device: &str) -> Option<Value> {

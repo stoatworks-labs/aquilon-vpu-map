@@ -12,7 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { AwjClient } from './lib/awj.js';
-import { readMapping, readIdentity, readScreenNames, readScreenStatus } from './lib/read.js';
+import { readMapping, readIdentity, readScreenNames, readScreenStatus, readOutputs } from './lib/read.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(HERE, 'public');
@@ -73,6 +73,9 @@ async function handleRead(req, res, url) {
       current: await readScreenStatus(client, { which: 'current' }),
       new: await readScreenStatus(client, { which: 'new' }),
     };
+    // Which screen, region and plug each output is, for the header over the
+    // grid's columns. Absent on a firmware that spells the paths differently.
+    const outputs = await readOutputs(client);
     const current = await readMapping(client, { which: 'current', device });
 
     // The staged mapping is the same size again; only read it if it exists.
@@ -91,6 +94,7 @@ async function handleRead(req, res, url) {
       elapsedMs: Date.now() - started,
       screens,
       screenStatus,
+      outputs,
       current,
       new: next,
     });

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 import { summarise, diff, MIXER_IDS, MAX_MIXERS, parseMixerId } from '../public/vpu.js';
 import { AwjClient } from '../lib/awj.js';
-import { readMapping, readIdentity } from '../lib/read.js';
+import { readMapping, readIdentity, readOutputs } from '../lib/read.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const snapshot = JSON.parse(
@@ -208,6 +208,47 @@ test('readMapping round-trips the captured device through the wire', async () =>
     // All eight pipes survive the round trip, interleaved as the hardware sent them.
     assert.equal(mixers.PROC_1_MIXER_1.mixerAllocation.usedOnOutPipe3, '2');
     assert.equal(mixers.PROC_1_MIXER_1.mixerAllocation.usedOnOutPipe2, 'NONE');
+  } finally {
+    client.close();
+    server.close();
+  }
+});
+
+test('readOutputs reads the assigned outputs in full and the rest by name only', async () => {
+  // The table is what the object model says an output looks like (the store's
+  // outputList, in AWJ spelling); no Aquilon has answered these paths yet.
+  const O = (n) => `DeviceObject/$output/@items/${n}`;
+  const table = {
+    [`${O(1)}/canvas/status/@props/usedInScreenAux`]: 'S1',
+    [`${O(1)}/canvas/status/@props/usedInRegion`]: '1',
+    [`${O(1)}/canvas/status/@props/capability`]: '4K',
+    [`${O(1)}/control/@props/label`]: 'LED left',
+    [`${O(1)}/mapping/@props/card`]: 'OUT_1',
+    [`${O(1)}/mapping/@props/physical`]: '1',
+    [`${O(1)}/$plug/@items/1/status/@props/type`]: 'HDMI',
+    [`${O(2)}/canvas/status/@props/usedInScreenAux`]: 'NONE',
+    [`${O(2)}/canvas/status/@props/usedInRegion`]: '1',
+    [`${O(3)}/canvas/status/@props/usedInScreenAux`]: 'A1',
+    [`${O(3)}/canvas/status/@props/capability`]: 'DUAL',
+    // 4 is not fitted (E12); 5 has an empty label and no plug type
+    [`${O(5)}/canvas/status/@props/usedInScreenAux`]: 'S2',
+    [`${O(5)}/canvas/status/@props/usedInRegion`]: '2',
+    [`${O(5)}/canvas/status/@props/capability`]: 'DUAL',
+    [`${O(5)}/control/@props/label`]: '',
+  };
+  const server = fakeDevice(table);
+  const port = await listen(server);
+  const client = new AwjClient({ host: '127.0.0.1', port, timeout: 4000 });
+  await client.connect();
+  try {
+    const outputs = await readOutputs(client, { max: 6 });
+    assert.deepEqual(Object.keys(outputs), ['1', '2', '3', '5'], 'a missing output is skipped, not the end');
+    assert.deepEqual(outputs[1], {
+      screen: 'S1', region: '1', capability: '4K', label: 'LED left', card: 'OUT_1', physical: '1', type: 'HDMI',
+    });
+    assert.deepEqual(outputs[2], { screen: 'NONE' }, 'unassigned: one read, nothing more');
+    assert.deepEqual(outputs[3], { screen: 'A1' }, 'an aux costs no VPU');
+    assert.deepEqual(outputs[5], { screen: 'S2', region: '2', capability: 'DUAL' }, 'blanks are left out');
   } finally {
     client.close();
     server.close();

@@ -43,7 +43,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { AwjClient } from '../lib/awj.js';
-import { readIdentity, readMapping, readScreenStatus, readScreenNames } from '../lib/read.js';
+import { readIdentity, readMapping, readScreenStatus, readScreenNames, readOutputs } from '../lib/read.js';
 import {
   buildLinkGrid,
   optimizedVpus,
@@ -229,6 +229,26 @@ const GAPS = [
     },
   },
   {
+    id: 'output-header',
+    what: 'Which output plug each of a screen’s links is',
+    why:
+      'The header over the grid’s columns deals a screen’s links out over its ' +
+      'outputs in output-number order, two per 4K output (`screenOutputLinks`). ' +
+      'That order is the only one the object model offers and no hardware has ' +
+      'confirmed it — the outputs were never read off the Aquilon C — so the app ' +
+      'checks the outputs against the screen’s own outputCount and ' +
+      'usedOutputCapabilities and draws nothing for a screen that does not add up. ' +
+      'The `$output` paths themselves (`canvas/status/@props/usedInScreenAux`, ' +
+      '`usedInRegion`, `capability`, `mapping/@props/card`, `$plug/@items/1/status/' +
+      '@props/type`) are the store’s spellings and unanswered too: a firmware that ' +
+      'spells them differently costs one E12 per output and the header is absent.',
+    setup:
+      'Any screen with outputs assigned out of order — output 9 as its first link, ' +
+      'output 5 as its second — then compare the header with Preconfig > Screens. ' +
+      'This script reads the outputs on every capture from now on.',
+    covered: (c) => Boolean(c.outputs && Object.values(c.outputs).some((o) => /^S\d+$/.test(String(o.screen)))),
+  },
+  {
     id: 'vpu-layer-populated',
     what: '$vpuLayer populated by a newer firmware',
     why:
@@ -356,6 +376,12 @@ async function capture(opts) {
     };
     console.log(`  screen status: ${Object.keys(screenStatus.current).length} configured screens`);
 
+    // Which screen, region and plug each output is — the grid's header. Output
+    // labels are show data like screen names, so they go the same way.
+    const outputs = await readOutputs(client);
+    if (!opts.keepNames) for (const o of Object.values(outputs)) delete o.label;
+    console.log(`  outputs: ${Object.keys(outputs).length} read`);
+
     const current = await readMapping(client, { which: 'current', device: opts.device });
     let next = null;
     try {
@@ -387,6 +413,7 @@ async function capture(opts) {
       device: identity.dev,
       ...(screens ? { screens } : {}),
       screenStatus,
+      outputs,
       current,
       new: next,
     };

@@ -74,6 +74,9 @@ async fn read_vpu(ip: String, device: String) -> Result<Value, String> {
             "current": read::screen_status(&mut a, "current"),
             "new": read::screen_status(&mut a, "new"),
         });
+        // Which screen, region and plug each output is, for the header over
+        // the grid's columns.
+        let outputs = read::outputs(&mut a);
 
         let current = match read::mapping_side(&mut a, "current", &device) {
             Some(v) => v,
@@ -102,6 +105,7 @@ async fn read_vpu(ip: String, device: String) -> Result<Value, String> {
             "elapsedMs": started.elapsed().as_millis() as u64,
             "screens": screens,
             "screenStatus": screen_status,
+            "outputs": outputs,
             "current": current,
             "new": staged,
         }))

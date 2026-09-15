@@ -158,6 +158,50 @@ fn reads_the_mixer_table_with_all_eight_pipes() {
 }
 
 #[test]
+fn reads_the_assigned_outputs_in_full_and_the_rest_by_name() {
+    // The store's outputList in AWJ spelling — the same table test/vpu.test.js
+    // serves. No Aquilon has answered these paths yet.
+    let o = |n: u32| format!("DeviceObject/$output/@items/{n}");
+    let mut t = HashMap::new();
+    t.insert(format!("{}/canvas/status/@props/usedInScreenAux", o(1)), serde_json::json!("S1"));
+    t.insert(format!("{}/canvas/status/@props/usedInRegion", o(1)), serde_json::json!("1"));
+    t.insert(format!("{}/canvas/status/@props/capability", o(1)), serde_json::json!("4K"));
+    t.insert(format!("{}/control/@props/label", o(1)), serde_json::json!("LED left"));
+    t.insert(format!("{}/mapping/@props/card", o(1)), serde_json::json!("OUT_1"));
+    t.insert(format!("{}/mapping/@props/physical", o(1)), serde_json::json!("1"));
+    t.insert(format!("{}/$plug/@items/1/status/@props/type", o(1)), serde_json::json!("HDMI"));
+    t.insert(format!("{}/canvas/status/@props/usedInScreenAux", o(2)), serde_json::json!("NONE"));
+    t.insert(format!("{}/canvas/status/@props/usedInRegion", o(2)), serde_json::json!("1"));
+    t.insert(format!("{}/canvas/status/@props/usedInScreenAux", o(3)), serde_json::json!("A1"));
+    // 4 is not fitted; 5 has an empty label and no plug type.
+    t.insert(format!("{}/canvas/status/@props/usedInScreenAux", o(5)), serde_json::json!("S2"));
+    t.insert(format!("{}/canvas/status/@props/usedInRegion", o(5)), serde_json::json!("2"));
+    t.insert(format!("{}/canvas/status/@props/capability", o(5)), serde_json::json!("DUAL"));
+    t.insert(format!("{}/control/@props/label", o(5)), serde_json::json!(""));
+
+    let (port, _rx) = fake_device(t);
+    let mut a = connect(port);
+    let outputs = crate::read::outputs(&mut a);
+
+    let keys: Vec<&String> = outputs.as_object().unwrap().keys().collect();
+    assert_eq!(keys, vec!["1", "2", "3", "5"], "a missing output is skipped, not the end");
+    assert_eq!(
+        outputs["1"],
+        serde_json::json!({
+            "screen": "S1", "region": "1", "capability": "4K", "label": "LED left",
+            "card": "OUT_1", "physical": "1", "type": "HDMI"
+        })
+    );
+    assert_eq!(outputs["2"], serde_json::json!({ "screen": "NONE" }), "unassigned: nothing more");
+    assert_eq!(outputs["3"], serde_json::json!({ "screen": "A1" }), "an aux costs no VPU");
+    assert_eq!(
+        outputs["5"],
+        serde_json::json!({ "screen": "S2", "region": "2", "capability": "DUAL" }),
+        "blanks are left out"
+    );
+}
+
+#[test]
 fn unreachable_host_is_an_error_not_a_panic() {
     // Port 1 on loopback refuses immediately.
     let r = Awj::connect("127.0.0.1", 1, Duration::from_millis(500));
