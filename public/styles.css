@@ -308,17 +308,24 @@ svg.vpu .blk.c1 .tie { color:var(--s1); } svg.vpu .blk.c2 .tie { color:var(--s2)
 svg.vpu .blk.c3 .tie { color:var(--s3); } svg.vpu .blk.c4 .tie { color:var(--s4); }
 svg.vpu .blk.c5 .tie { color:var(--s5); } svg.vpu .blk.c6 .tie { color:var(--s6); }
 
-.grids { display:grid; grid-template-columns:1fr; gap:14px; }
+/* One card per VPU, two abreast. A screen that continues onto another VPU has
+   its output links running out of the bottom of one card and into the top of
+   the next, so those cards are stacked in one column (`.vpu-stack` spans as
+   many rows as it holds) and the other VPUs pack in beside them. */
+.grids { display:grid; grid-template-columns:1fr; gap:14px; align-items:start; grid-auto-flow:dense; }
 @media (min-width:720px) { .grids { grid-template-columns:repeat(2,1fr); } }
+.vpu-stack { display:flex; flex-direction:column; gap:14px; min-width:0; }
 .vpu-card {
   margin:0; background:var(--panel); border:1px solid var(--rule);
-  border-radius:4px; box-shadow:var(--shadow); padding:12px 12px 10px;
+  border-radius:4px; box-shadow:var(--shadow); padding:10px 12px 12px;
   display:flex; flex-direction:column; gap:8px;
 }
 .vpu-card.unfitted { box-shadow:none; opacity:.55; }
+/* The caption heads the card, so that in a stack "VPU 2" sits exactly where the
+   links arriving from VPU 1 are pointing. */
 .vpu-card figcaption {
   display:flex; flex-wrap:wrap; gap:3px 10px; align-items:baseline;
-  border-top:1px solid var(--rule-soft); padding-top:8px;
+  border-bottom:1px solid var(--rule-soft); padding-bottom:8px;
   font-family:"IBM Plex Mono",ui-monospace,monospace;
 }
 .vpu-card figcaption b { font-size:12px; letter-spacing:.07em; color:var(--ink); }
@@ -342,6 +349,21 @@ svg.vpu .screen-bar.c6 rect { fill:var(--s6-tint); stroke:var(--s6); }
 svg.vpu .screen-bar.c1 text { fill:var(--s1); } svg.vpu .screen-bar.c2 text { fill:var(--s2); }
 svg.vpu .screen-bar.c3 text { fill:var(--s3); } svg.vpu .screen-bar.c4 text { fill:var(--s4); }
 svg.vpu .screen-bar.c5 text { fill:var(--s5); } svg.vpu .screen-bar.c6 text { fill:var(--s6); }
+/* a screen continuing from an earlier VPU: the same links, arriving from above */
+svg.vpu .screen-bar.cont rect { stroke-dasharray:4 2; }
+/* the header under the screen bar: which region, then which output plug, each
+   link is — drawn only when the device's outputs are known and add up */
+svg.vpu .hdr rect { stroke-width:1; fill:var(--panel-sunk); opacity:.9; }
+svg.vpu .hdr text {
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:7.5px; letter-spacing:.02em; text-anchor:middle; pointer-events:none;
+}
+svg.vpu .hdr.c1 rect { stroke:var(--s1); } svg.vpu .hdr.c1 text { fill:var(--s1); }
+svg.vpu .hdr.c2 rect { stroke:var(--s2); } svg.vpu .hdr.c2 text { fill:var(--s2); }
+svg.vpu .hdr.c3 rect { stroke:var(--s3); } svg.vpu .hdr.c3 text { fill:var(--s3); }
+svg.vpu .hdr.c4 rect { stroke:var(--s4); } svg.vpu .hdr.c4 text { fill:var(--s4); }
+svg.vpu .hdr.c5 rect { stroke:var(--s5); } svg.vpu .hdr.c5 text { fill:var(--s5); }
+svg.vpu .hdr.c6 rect { stroke:var(--s6); } svg.vpu .hdr.c6 text { fill:var(--s6); }
 /* the background band: output capacity, but not one of the eight layer links */
 svg.vpu .field.band { stroke-dasharray:4 3; opacity:.75; }
 svg.vpu .band-label {
@@ -356,6 +378,23 @@ svg.vpu .in  { stroke:var(--accent); stroke-width:1.5; }
 svg.vpu .out { stroke:var(--ink-soft); stroke-width:1.5; }
 svg.vpu .ah-in  { fill:var(--accent); }
 svg.vpu .ah-out { fill:var(--ink-soft); }
+/* an output link running on from one VPU into the next takes its screen's colour
+   at both ends, and the leaving end says where it goes */
+svg.vpu .out.cascade { stroke-width:2.5; }
+svg.vpu .out.cascade.c1, svg.vpu .ah-out.c1 { stroke:var(--s1); fill:var(--s1); }
+svg.vpu .out.cascade.c2, svg.vpu .ah-out.c2 { stroke:var(--s2); fill:var(--s2); }
+svg.vpu .out.cascade.c3, svg.vpu .ah-out.c3 { stroke:var(--s3); fill:var(--s3); }
+svg.vpu .out.cascade.c4, svg.vpu .ah-out.c4 { stroke:var(--s4); fill:var(--s4); }
+svg.vpu .out.cascade.c5, svg.vpu .ah-out.c5 { stroke:var(--s5); fill:var(--s5); }
+svg.vpu .out.cascade.c6, svg.vpu .ah-out.c6 { stroke:var(--s6); fill:var(--s6); }
+svg.vpu .ah-out[class*=" c"] { stroke:none; }
+svg.vpu .cascade-label {
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:8px; font-weight:600; letter-spacing:.06em; text-anchor:middle;
+}
+svg.vpu .cascade-label.c1 { fill:var(--s1); } svg.vpu .cascade-label.c2 { fill:var(--s2); }
+svg.vpu .cascade-label.c3 { fill:var(--s3); } svg.vpu .cascade-label.c4 { fill:var(--s4); }
+svg.vpu .cascade-label.c5 { fill:var(--s5); } svg.vpu .cascade-label.c6 { fill:var(--s6); }
 svg.vpu.unfitted .in, svg.vpu.unfitted .out { opacity:.35; }
 
 svg.vpu .blk rect { stroke-width:1.5; }
@@ -410,6 +449,11 @@ svg.vpu .hook { fill:none; stroke:var(--warn); stroke-width:1.5; }
   color:var(--accent); border:1px solid var(--accent); border-radius:2px;
   padding:1px 5px; margin-top:2px;
 }
+/* a screen continuing from an earlier VPU, in that screen's colour */
+.badge.cont { text-transform:none; letter-spacing:.04em; border-style:dashed; }
+.badge.cont.c1 { color:var(--s1); border-color:var(--s1); } .badge.cont.c2 { color:var(--s2); border-color:var(--s2); }
+.badge.cont.c3 { color:var(--s3); border-color:var(--s3); } .badge.cont.c4 { color:var(--s4); border-color:var(--s4); }
+.badge.cont.c5 { color:var(--s5); border-color:var(--s5); } .badge.cont.c6 { color:var(--s6); border-color:var(--s6); }
 
 /* ---------- budget rows ---------- */
 .budget {

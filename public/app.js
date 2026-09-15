@@ -14,6 +14,8 @@ import {
   diff,
   buildLinkGrid,
   optimizedVpus,
+  stackVpus,
+  screenOutputLinks,
 } from './vpu.js';
 
 const $ = (id) => document.getElementById(id);
@@ -272,21 +274,44 @@ function svg(tag, props = {}, ...children) {
 const CELL = 30;
 const PAD_L = 34; // room for the layer-link arrows
 const PAD_T = 22; // room for the output-link arrows
-const BAND_GAP = 12; // between the layer field and the background band
+const BAND_GAP = 12; // between the background band and the layer field
 const HEAD = 15; // the screen bar over the output links, as the manual draws it
+const HDR = 12; // one header row: the region, then the output, of each link
+const TAIL = 11; // room under the output arrows for "↓ VPU n"
 const FIELD = CELL * LINKS_PER_VPU;
 
-function renderVpu(grid, colours, optimized) {
-  // Native backgrounds spend output capacity but not layer capacity, so they are
-  // drawn in a band under the eight layer links rather than inside them.
+/**
+ * One VPU, as the manual draws it (§5.5), read top to bottom the way an output
+ * link runs through it: in at the top, through the native background first,
+ * then down the eight layer links, and out at the bottom — into the next VPU
+ * when the screen continues there.
+ *
+ * @param {object} grid one of `buildLinkGrid`'s
+ * @param {Map} colours screen -> colour class
+ * @param {boolean} optimized whether this VPU is in Optimized mode
+ * @param {Map} [outputLinks] `screenOutputLinks`, for the header over the columns
+ */
+function renderVpu(grid, colours, optimized, outputLinks) {
   const bandRows = grid.backgroundRows || 0;
   const screens = grid.screens || [];
-  const head = screens.length ? HEAD + 4 : 0;
-  const bandTop = head + PAD_T + FIELD + (bandRows ? BAND_GAP : 0);
+  // The header: the screen bar, then — when the device's outputs are known —
+  // which region and which output plug each of its links is.
+  const known = screens.filter((s) => outputLinks?.get(s.screen)?.consistent);
+  const headerRows = known.length ? 2 : 0;
+  const head = screens.length ? HEAD + 4 + headerRows * (HDR + 2) : 0;
+  const continues = screens.some((s) => s.to !== undefined);
+
+  // Native backgrounds spend output capacity but not layer capacity, so they
+  // are drawn in a band of their own — above the field, because a native is
+  // the bottom of the stack and so the first thing on the output link.
+  const top = head + PAD_T;
+  const bandTop = top;
   const bandH = bandRows * CELL;
+  const y0 = top + (bandRows ? bandH + BAND_GAP : 0);
+  const bottom = y0 + FIELD;
 
   const W = PAD_L + FIELD + 14;
-  const H = bandTop + bandH + PAD_T;
+  const H = bottom + PAD_T + (continues ? TAIL : 0);
   const root = svg('svg', {
     class: `vpu${grid.fitted ? '' : ' unfitted'}`,
     viewBox: `0 0 ${W} ${H}`,
@@ -295,7 +320,6 @@ function renderVpu(grid, colours, optimized) {
   });
 
   const x0 = PAD_L;
-  const y0 = head + PAD_T;
   // Where a block's row sits: the field for layers, the band for backgrounds.
   const yOf = (row) =>
     row >= LINKS_PER_VPU ? bandTop + (row - LINKS_PER_VPU) * CELL : y0 + row * CELL;
@@ -306,23 +330,65 @@ function renderVpu(grid, colours, optimized) {
   for (const s of screens) {
     const sx = x0 + s.col * CELL;
     const sw = s.width * CELL;
-    const g = svg('g', { class: `screen-bar ${colours.get(s.screen) || 'c1'}` });
+    const colour = colours.get(s.screen) || 'c1';
+    const g = svg('g', { class: `screen-bar ${colour}${s.from !== undefined ? ' cont' : ''}` });
     g.append(
       svg('title', {}, document.createTextNode(
-        `${screenWithName(s.screen)} · output link${s.width === 1 ? '' : 's'} 1-${s.width}`,
+        `${screenWithName(s.screen)} · output link${s.width === 1 ? '' : 's'} 1-${s.width}` +
+        (s.from !== undefined ? `\ncontinues from VPU ${s.from} — the same output links, more layers` : '') +
+        (s.to !== undefined ? `\ncontinues onto VPU ${s.to}` : ''),
       )),
       svg('rect', { x: sx + 1.5, y: 2, width: sw - 3, height: HEAD, rx: 2 }),
       svg('text', { x: sx + sw / 2, y: 2 + HEAD - 4 }, document.createTextNode(String(s.screen))),
     );
     root.append(g);
+
+    // The header proper: a cell per region run, then one per output, each on
+    // the links it carries. Only for screens whose outputs add up to what the
+    // screen itself reports — see `screenOutputLinks`.
+    const info = outputLinks?.get(s.screen);
+    if (!info?.consistent) continue;
+    const cell = (row, first, last, text, title) => {
+      const cx = x0 + (s.col + first - 1) * CELL;
+      const cw = (last - first + 1) * CELL;
+      const cy = 2 + HEAD + 2 + row * (HDR + 2);
+      const c = svg('g', { class: `hdr ${colour}` });
+      c.append(
+        svg('title', {}, document.createTextNode(title)),
+        svg('rect', { x: cx + 1.5, y: cy, width: cw - 3, height: HDR, rx: 1.5 }),
+        svg('text', { x: cx + cw / 2, y: cy + HDR - 3 }, document.createTextNode(text)),
+      );
+      root.append(c);
+    };
+    // Regions: adjacent outputs in the same region share one cell. Links past
+    // this VPU's run of the screen are not drawn here.
+    const runs = info.runs.filter((r) => r.first <= s.width);
+    const regions = [];
+    for (const r of runs) {
+      const last = Math.min(r.last, s.width);
+      const tail = regions[regions.length - 1];
+      if (tail && tail.name === r.region) tail.last = last;
+      else regions.push({ name: r.region, first: r.first, last });
+    }
+    for (const r of regions) {
+      cell(0, r.first, r.last, r.name === null ? '—' : `R${r.name}`,
+        `${screenWithName(s.screen)} · region ${r.name ?? '?'} · output link${r.last === r.first ? '' : 's'} ` +
+        (r.last === r.first ? `${r.first}` : `${r.first}-${r.last}`));
+    }
+    for (const r of runs) {
+      const last = Math.min(r.last, s.width);
+      const wide = last - r.first + 1 >= 2;
+      cell(1, r.first, last, wide ? `Out ${r.output}` : String(r.output),
+        `Output ${r.output}${r.label ? ` · ${r.label}` : ''}` +
+        `\n${screenWithName(s.screen)} · region ${r.region ?? '?'} · link${last === r.first ? '' : 's'} ` +
+        (last === r.first ? `${r.first}` : `${r.first}-${last}`) +
+        `\ncapability ${r.capability ?? '?'}` +
+        (r.type ? ` · ${r.type}` : '') +
+        (r.card ? `\n${r.card}${r.physical ? ` plug ${r.physical}` : ''}` : ''));
+    }
   }
 
-  // chassis
-  root.append(
-    svg('rect', {
-      class: 'field', x: x0, y: y0, width: FIELD, height: FIELD, rx: 2,
-    }),
-  );
+  // chassis — the band first, then the field
   if (bandRows) {
     root.append(
       svg('rect', {
@@ -332,6 +398,11 @@ function renderVpu(grid, colours, optimized) {
         document.createTextNode('bg')),
     );
   }
+  root.append(
+    svg('rect', {
+      class: 'field', x: x0, y: y0, width: FIELD, height: FIELD, rx: 2,
+    }),
+  );
 
   // link lattice
   for (let i = 1; i < LINKS_PER_VPU; i++) {
@@ -351,30 +422,64 @@ function renderVpu(grid, colours, optimized) {
     );
   }
 
+  // Which output links arrive from an earlier VPU, and which carry on to a later
+  // one: those arrows take the screen's colour, and the ones leaving say where.
+  const arriving = new Map();
+  const leaving = new Map();
+  for (const s of screens) {
+    for (let c = s.col; c < s.col + s.width && c < LINKS_PER_VPU; c++) {
+      if (s.from !== undefined) arriving.set(c, s);
+      if (s.to !== undefined) leaving.set(c, s);
+    }
+  }
+
   // layer links in (left) — eight of them, and only for the field: a background
-  // is not on a layer link. Output links out through the top and the bottom of
-  // whichever section is last.
+  // is not on a layer link. Output links in through the top of whichever section
+  // is first and out through the bottom of the field.
   for (let i = 0; i < LINKS_PER_VPU; i++) {
     const cy = y0 + i * CELL + CELL / 2;
     root.append(
       svg('line', { class: 'in', x1: x0 - 26, y1: cy, x2: x0 - 4, y2: cy, 'marker-end': `url(#in-${grid.vpu})` }),
     );
     const cx = x0 + i * CELL + CELL / 2;
+    const inFrom = arriving.get(i);
+    const outTo = leaving.get(i);
+    const inCls = inFrom ? `out cascade ${colours.get(inFrom.screen) || 'c1'}` : 'out';
+    const outCls = outTo ? `out cascade ${colours.get(outTo.screen) || 'c1'}` : 'out';
     root.append(
-      svg('line', { class: 'out', x1: cx, y1: y0 - 16, x2: cx, y2: y0 - 3, 'marker-end': `url(#out-${grid.vpu})` }),
       svg('line', {
-        class: 'out',
-        x1: cx, y1: bandTop + bandH + 3, x2: cx, y2: bandTop + bandH + 16,
-        'marker-end': `url(#out-${grid.vpu})`,
+        class: inCls, x1: cx, y1: top - 16, x2: cx, y2: top - 3,
+        'marker-end': `url(#out-${inFrom ? colours.get(inFrom.screen) || 'c1' : ''}${grid.vpu})`,
+      }),
+      svg('line', {
+        class: outCls, x1: cx, y1: bottom + 3, x2: cx, y2: bottom + 16,
+        'marker-end': `url(#out-${outTo ? colours.get(outTo.screen) || 'c1' : ''}${grid.vpu})`,
       }),
     );
   }
+  for (const s of screens) {
+    if (s.to === undefined) continue;
+    root.append(
+      svg('text', {
+        class: `cascade-label ${colours.get(s.screen) || 'c1'}`,
+        x: x0 + (s.col + Math.min(s.width, LINKS_PER_VPU - s.col) / 2) * CELL,
+        y: bottom + PAD_T + TAIL - 4,
+      }, document.createTextNode(`↓ VPU ${s.to}`)),
+    );
+  }
 
-  // arrowheads
+  // arrowheads — one per colour a cascade needs, on top of the two plain ones
   const marker = (id, cls) =>
     svg('marker', { id, viewBox: '0 0 8 8', refX: 6, refY: 4, markerWidth: 5, markerHeight: 5, orient: 'auto-start-reverse' },
       svg('path', { class: cls, d: 'M0,1 L7,4 L0,7 z' }));
-  root.append(svg('defs', {}, marker(`in-${grid.vpu}`, 'ah-in'), marker(`out-${grid.vpu}`, 'ah-out')));
+  const cascadeColours = new Set(
+    [...arriving.values(), ...leaving.values()].map((s) => colours.get(s.screen) || 'c1'),
+  );
+  root.append(svg('defs', {},
+    marker(`in-${grid.vpu}`, 'ah-in'),
+    marker(`out-${grid.vpu}`, 'ah-out'),
+    ...[...cascadeColours].map((c) => marker(`out-${c}${grid.vpu}`, `ah-out ${c}`)),
+  ));
 
   // Layer blocks. A block is one layer: its own rows, no other layer on them, and
   // one continuous bar across the output links it feeds. The device reports those
@@ -496,40 +601,61 @@ function renderVpu(grid, colours, optimized) {
   return root;
 }
 
-function renderGrids(mixers, colours, screenStatus) {
+function renderGrids(mixers, colours, screenStatus, outputs) {
   const optimised = optimizedVpus(mixers, screenStatus);
   const grids = buildLinkGrid(mixers, optimised);
-  els.grids.replaceChildren(
-    ...grids.map((g) =>
+  const outputLinks = screenOutputLinks(outputs, screenStatus);
+
+  const card = (g) =>
+    el(
+      'figure',
+      { class: `vpu-card${g.fitted ? '' : ' unfitted'}` },
       el(
-        'figure',
-        { class: `vpu-card${g.fitted ? '' : ' unfitted'}` },
-        renderVpu(g, colours, optimised.has(g.vpu)),
-        el(
-          'figcaption',
-          {},
-          el('b', { text: `VPU ${g.vpu}` }),
-          el('span', {
-            text: g.fitted
-              ? `${g.blocks.length} block${g.blocks.length === 1 ? '' : 's'} · ${g.rowsUsed}/${LINKS_PER_VPU} layer links` +
-                (g.backgroundRows ? ` · ${g.backgroundRows} background` : '') +
-                (g.spare ? ` · ${g.spare} spare` : '')
-              : 'not fitted',
-          }),
-          optimised.has(g.vpu)
-            ? el('span', {
-                class: 'badge',
-                title: 'Optimized mode is on for this VPU (manual §5.5.6) — one of its screens uses at least 5 output links and a capacity-2 layer',
-                text: 'optimized',
-              })
-            : null,
-        ),
+        'figcaption',
+        {},
+        el('b', { text: `VPU ${g.vpu}` }),
+        el('span', {
+          text: g.fitted
+            ? `${g.blocks.length} block${g.blocks.length === 1 ? '' : 's'} · ${g.rowsUsed}/${LINKS_PER_VPU} layer links` +
+              (g.backgroundRows ? ` · ${g.backgroundRows} background` : '') +
+              (g.spare ? ` · ${g.spare} spare` : '')
+            : 'not fitted',
+        }),
+        optimised.has(g.vpu)
+          ? el('span', {
+              class: 'badge',
+              title: 'Optimized mode is on for this VPU (manual §5.5.6) — one of its screens uses at least 5 output links and a capacity-2 layer',
+              text: 'optimized',
+            })
+          : null,
+        ...(g.screens || [])
+          .filter((s) => s.from !== undefined)
+          .map((s) =>
+            el('span', {
+              class: `badge cont ${colours.get(s.screen) || 'c1'}`,
+              title: `${screenWithName(s.screen)} ran out of mixers on VPU ${s.from}: its next layer is here, on the same output links`,
+              text: `${s.screen} continues from VPU ${s.from}`,
+            }),
+          ),
       ),
-    ),
+      renderVpu(g, colours, optimised.has(g.vpu), outputLinks),
+    );
+
+  // A screen that continues onto another VPU has its output links running out
+  // of the bottom of one card and into the top of the next, so those cards are
+  // stacked, in signal order, rather than sat side by side.
+  const byVpu = new Map(grids.map((g) => [g.vpu, g]));
+  els.grids.replaceChildren(
+    ...stackVpus(grids).map((members) => {
+      const cards = members.map((v) => card(byVpu.get(v)));
+      if (cards.length === 1) return cards[0];
+      return el('div', { class: 'vpu-stack', style: `grid-row: span ${cards.length}` }, ...cards);
+    }),
   );
 
   const placed = grids.reduce((n, g) => n + g.blocks.length, 0);
   const reported = grids.some((g) => g.placement === 'reported-columns');
+  const headed = outputLinks.size > 0;
 
   els.derivedNote.dataset.kind = reported ? 'partial' : 'derived';
   els.derivedNote.replaceChildren(
@@ -546,8 +672,14 @@ function renderGrids(mixers, colours, screenStatus) {
           'one layer, as many rows as the layer\u2019s capacity, so no two layers share a row and slices of ' +
           'one layer share its bar. A layer past four output links wraps onto another link at the centre ' +
           'line (\u00a75.5.4) unless Optimized mode lifts that for it (\u00a75.5.6). Native backgrounds spend ' +
-          'output capacity but not layer capacity, so they sit in the band below the eight links. Nothing ' +
-          'names the layer link itself, so only the order down the field is derived.'
+          'output capacity but not layer capacity, so they sit in the band above the eight links \u2014 first ' +
+          'on the output link, as the bottom of the stack. A screen that runs out of mixers continues on the ' +
+          'next VPU, on the same output links, so those VPUs are stacked and the links run straight down. ' +
+          (headed
+            ? 'The header over each link names its region and output plug, dealt out in output order, ' +
+              'which the device\u2019s own figures agree with. '
+            : 'Nothing in this capture says which output plug each link is, so the header stops at the screen. ') +
+          'Nothing names the layer link itself, so only the order down the field is derived.'
         : `The device says what each of these ${placed} blocks serves (screen, layer, slice, capability) ` +
           'but not which link it occupies. Blocks are placed by laying each screen-and-layer run left to right ' +
           'in capacity-sized squares, wrapping onto another layer link when a run fills one. ' +
@@ -735,7 +867,7 @@ function render(payload) {
 
   renderStats(sum, { diffCount: changes.length, comparing });
   renderChassis(current, colours, changedIds);
-  renderGrids(current, colours, (payload.screenStatus || {}).current);
+  renderGrids(current, colours, (payload.screenStatus || {}).current, payload.outputs);
   renderBudget(sum, colours);
   const status = (payload.screenStatus || {}).current;
   const staged = (payload.screenStatus || {}).new;

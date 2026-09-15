@@ -14,6 +14,8 @@ import {
   reportedOutputs,
   optimizedVpus,
   capacityToLinks,
+  stackVpus,
+  screenOutputLinks,
   LINKS_PER_VPU,
   SCALING_ENGINE_BOUNDARY,
 } from '../public/vpu.js';
@@ -384,9 +386,10 @@ test('Optimized mode lifts the boundary for capacity-2 layers (§5.5.6)', () => 
   assert.equal(naive.blocks.filter((b) => b.screen === 'S1' && b.layer === '1').length, 2);
 });
 
-test('native backgrounds sit below the eight layer links', () => {
+test('native backgrounds sit in their own band, out of the eight layer links', () => {
   // They hold mixers and drive output links, but they are not layer capacity —
-  // so they are laid out in their own band and left out of rowsUsed.
+  // so they are laid out in their own band (rows numbered from LINKS_PER_VPU up,
+  // which a renderer draws above the field) and left out of rowsUsed.
   for (const snap of [snapshot, sixOut, optimized]) {
     for (const g of gridOf(snap)) {
       for (const b of g.blocks) {
@@ -419,6 +422,146 @@ test('every real capture fits its eight layer links', () => {
       assert.ok(g.columnsUsed <= LINKS_PER_VPU, `VPU ${g.vpu} columns ${g.columnsUsed}`);
     }
   }
+});
+
+/* ---------- a screen continuing onto another VPU ---------- */
+
+test('a screen continuing on another VPU keeps its columns, and the VPUs stack', () => {
+  // The base capture: S3's native is on VPU 1 and its layer 1 on VPU 2, on the
+  // same two output links. The link runs down out of VPU 1 into VPU 2, so S3
+  // keeps links 5-6 on both and the two cards are stacked in that order.
+  const grids = gridOf(snapshot);
+  const p1 = grids.find((g) => g.vpu === 1);
+  const p2 = grids.find((g) => g.vpu === 2);
+  const s3on1 = p1.screens.find((s) => s.screen === 'S3');
+  const s3on2 = p2.screens.find((s) => s.screen === 'S3');
+  assert.deepEqual([s3on1.col, s3on1.width, s3on1.to], [4, 2, 2], 'VPU 1 hands S3 on to VPU 2');
+  assert.deepEqual([s3on2.col, s3on2.width, s3on2.from], [4, 2, 1], 'the same columns on VPU 2');
+  assert.deepEqual(s3on1.outputs, [1, 2]);
+  assert.deepEqual(s3on2.outputs, [1, 2], 'the same output links');
+  assert.equal(s3on1.from, undefined);
+  assert.equal(s3on2.to, undefined);
+
+  // S4 has VPU 2 to itself otherwise, and takes the first free columns.
+  const s4 = p2.screens.find((s) => s.screen === 'S4');
+  assert.deepEqual([s4.col, s4.width, s4.from, s4.to], [0, 2, undefined, undefined]);
+  for (const b of p2.blocks) {
+    const s = p2.screens.find((x) => x.screen === b.screen);
+    assert.ok(b.cols.every((c) => c >= s.col && c < s.col + s.width), `${b.mixer} on its screen's links`);
+  }
+  assert.deepEqual(stackVpus(grids), [[1, 2], [3], [4]]);
+
+  // The optimized capture does the same with S2: native and layer 1 on VPU 1's
+  // links 7-8, layer 2 on VPU 2.
+  const opt = gridOf(optimized);
+  const s2on1 = opt.find((g) => g.vpu === 1).screens.find((s) => s.screen === 'S2');
+  const s2on2 = opt.find((g) => g.vpu === 2).screens.find((s) => s.screen === 'S2');
+  assert.deepEqual([s2on1.col, s2on1.to], [6, 2]);
+  assert.deepEqual([s2on2.col, s2on2.from], [6, 1]);
+  assert.deepEqual(stackVpus(opt), [[1, 2], [3], [4]]);
+
+  // With nothing continuing, every VPU stands alone and the columns are the old
+  // side-by-side order.
+  assert.deepEqual(stackVpus(gridOf(sixOut)), [[1], [2], [3], [4]]);
+  assert.ok(gridOf(sixOut).every((g) => g.screens.every((s) => s.from === undefined && s.to === undefined)));
+});
+
+test('a screen on other output links of a later VPU is not a continuation', () => {
+  // §5.5.5's wider screen: the later VPU carries FURTHER links of the screen,
+  // so the link does not run from one VPU into the other and nothing stacks.
+  const mixer = (screen, layer, slice, pipes) => ({
+    isAvailable: true, isEnabled: true, usedInScreen: screen, usedInLayer: layer,
+    slice, capability: 'DUAL', cutnfillCapa: 'OFF',
+    mixerAllocation: Object.fromEntries(pipes.map(([k, v]) => [`usedOnOutPipe${k}`, String(v)])),
+  });
+  const mixers = {
+    PROC_1_MIXER_1: mixer('S1', '1', 0, [[1, 1], [2, 2]]),
+    PROC_2_MIXER_1: mixer('S1', '1', 1, [[1, 3], [2, 4]]),
+  };
+  const grids = buildLinkGrid(mixers);
+  const on1 = grids.find((g) => g.vpu === 1).screens.find((s) => s.screen === 'S1');
+  const on2 = grids.find((g) => g.vpu === 2).screens.find((s) => s.screen === 'S1');
+  assert.deepEqual(on1.outputs, [1, 2]);
+  assert.deepEqual(on2.outputs, [3, 4]);
+  assert.equal(on1.to, undefined);
+  assert.equal(on2.from, undefined);
+  assert.deepEqual(stackVpus(grids), [[1], [2], [3], [4]]);
+});
+
+test('two screens continuing onto the same columns: the second is placed first fit', () => {
+  // A continuing screen reserves the columns it had upstream before anything
+  // else is placed, so only ANOTHER continuing screen can be in its way. S1 sits
+  // on links 1-2 of VPU 1, S2 on links 1-2 of VPU 2, and both continue onto VPU 3:
+  // S1 keeps 1-2, S2 cannot and takes the next free run. Both continuations are
+  // still recorded, and all three VPUs stack.
+  const mixer = (screen, layer, pipes) => ({
+    isAvailable: true, isEnabled: true, usedInScreen: screen, usedInLayer: layer,
+    slice: 0, capability: 'DUAL', cutnfillCapa: 'OFF',
+    mixerAllocation: Object.fromEntries(pipes.map(([k, v]) => [`usedOnOutPipe${k}`, String(v)])),
+  });
+  const mixers = {
+    PROC_1_MIXER_1: mixer('S1', 'NATIVE', [[1, 1], [2, 2]]),
+    PROC_2_MIXER_1: mixer('S2', 'NATIVE', [[1, 1], [2, 2]]),
+    PROC_3_MIXER_1: mixer('S1', '1', [[1, 1], [2, 2]]),
+    PROC_3_MIXER_2: mixer('S2', '1', [[3, 1], [4, 2]]),
+  };
+  const grids = buildLinkGrid(mixers);
+  const p3 = grids.find((g) => g.vpu === 3);
+  const s1 = p3.screens.find((s) => s.screen === 'S1');
+  const s2 = p3.screens.find((s) => s.screen === 'S2');
+  assert.deepEqual([s1.col, s1.from], [0, 1], 'S1 keeps its columns');
+  assert.deepEqual([s2.col, s2.from], [2, 2], 'S2 is placed first fit, and still continues from VPU 2');
+  assert.equal(grids.find((g) => g.vpu === 1).screens[0].to, 3);
+  assert.equal(grids.find((g) => g.vpu === 2).screens[0].to, 3);
+  assert.equal(p3.overflow, false);
+  assert.deepEqual(stackVpus(grids), [[1, 2, 3], [4]]);
+});
+
+/* ---------- the header: which output each link is ---------- */
+
+test('the header deals a screen’s links out over its outputs, in output order', () => {
+  // Against the optimized capture's own figures: S1 is three 4K outputs (six
+  // links), S2, S3 and S4 one each. The table is synthetic — the outputs were
+  // never read off the Aquilon C — but the check against the screen's figures
+  // is what makes it safe to draw.
+  const outputs = {
+    3: { screen: 'S1', region: '1', capability: '4K', type: 'HDMI', card: 'OUT_1', physical: '3' },
+    1: { screen: 'S1', region: '1', capability: '4K', type: 'HDMI', card: 'OUT_1', physical: '1' },
+    2: { screen: 'S1', region: '2', capability: '4K', label: 'LED right', type: 'HDMI', card: 'OUT_1', physical: '2' },
+    4: { screen: 'S2', region: '1', capability: '4K' },
+    5: { screen: 'NONE', region: '1', capability: 'DUAL' },
+    6: { screen: 'S3', region: '1', capability: '4K' },
+    7: { screen: 'S4', region: '1', capability: 'DUAL' },
+    8: { screen: 'S4', region: '1', capability: 'DUAL' },
+    9: { screen: 'A1', region: '1', capability: 'DUAL' },
+  };
+  const links = screenOutputLinks(outputs, optimized.screenStatus.current);
+
+  const s1 = links.get('S1');
+  assert.equal(s1.consistent, true);
+  assert.equal(s1.links, 6);
+  assert.deepEqual(
+    s1.runs.map((r) => [r.output, r.region, r.first, r.last]),
+    [['1', '1', 1, 2], ['2', '2', 3, 4], ['3', '1', 5, 6]],
+    'output order, two links per 4K output — not the order the table was written in',
+  );
+  assert.equal(s1.runs[1].label, 'LED right');
+  assert.deepEqual([s1.runs[0].type, s1.runs[0].card, s1.runs[0].physical], ['HDMI', 'OUT_1', '1']);
+
+  assert.deepEqual(links.get('S2').runs.map((r) => [r.output, r.first, r.last]), [['4', 1, 2]]);
+  assert.equal(links.get('S2').consistent, true);
+  assert.equal(links.get('S3').consistent, true);
+
+  // Two dual outputs add up to S4's two links but not to its one output.
+  assert.equal(links.get('S4').consistent, false, 'outputCount says one output');
+
+  assert.equal(links.has('NONE'), false, 'unassigned outputs are nobody’s');
+  assert.equal(links.has('A1'), false, 'auxes do not use the VPU');
+
+  // Without the device's figures there is nothing to check against, and the
+  // table is taken as read.
+  assert.equal(screenOutputLinks(outputs).get('S4').consistent, true);
+  assert.equal(screenOutputLinks(undefined).size, 0);
 });
 
 test('the reported pipe keys are not the columns', () => {
