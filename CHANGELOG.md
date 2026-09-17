@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-09-17
+
+Also in this release: **one universal macOS build** in place of the two per-arch ones,
+and the changelog's 1.2.1 entry below, which the tag went out without.
+
 
 **The grid reads top to bottom the way an output link runs.** An output link goes in
 at the top of a VPU and out at the bottom, and a screen's native background is the
@@ -35,6 +39,11 @@ below it and the rest down the field. The model's row numbering is unchanged.
   that reads the outputs off a box, checks every screen adds up, and flags a screen
   whose outputs' number order is not their canvas order — the one that would settle it.
   The capture guide has the checklist for the next box.
+
+## 1.2.1 — 2026-09-04
+
+A maintenance release: Node 26 in the image and the test matrix, and the page kept
+out from under Android's system bars.
 
 ## 1.2.0 — 2026-08-21
 
