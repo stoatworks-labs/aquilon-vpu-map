@@ -34,15 +34,14 @@ a time. This puts the whole chassis on one screen.
 
 ## Download
 
-**[v1.2.1](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/tag/v1.2.1)** — prebuilt for macOS, Windows and Linux. Pick your platform:
+**[v1.3.0](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/tag/v1.3.0)** — prebuilt for macOS, Windows and Linux. Pick your platform:
 
 <details>
-<summary><b>macOS</b> — Apple Silicon, Intel</summary>
+<summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Apple Silicon · .dmg disk image | [`Aquilon.VPU.Map_1.2.1_aarch64.dmg`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.1/Aquilon.VPU.Map_1.2.1_aarch64.dmg) | 1.8 MB |
-| Intel · .dmg disk image | [`Aquilon.VPU.Map_1.2.1_x64.dmg`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.1/Aquilon.VPU.Map_1.2.1_x64.dmg) | 1.9 MB |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`Aquilon.VPU.Map_1.3.0_universal.dmg`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.3.0/Aquilon.VPU.Map_1.3.0_universal.dmg) | 3.7 MB |
 
 </details>
 
@@ -51,7 +50,7 @@ a time. This puts the whole chassis on one screen.
 
 | Build | Download | Size |
 | --- | --- | --- |
-| x64 · .exe installer | [`Aquilon.VPU.Map_1.2.1_x64-setup.exe`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.1/Aquilon.VPU.Map_1.2.1_x64-setup.exe) | 1.6 MB |
+| x64 · .exe installer | [`Aquilon.VPU.Map_1.3.0_x64-setup.exe`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.3.0/Aquilon.VPU.Map_1.3.0_x64-setup.exe) | 1.6 MB |
 
 </details>
 
@@ -60,15 +59,14 @@ a time. This puts the whole chassis on one screen.
 
 | Build | Download | Size |
 | --- | --- | --- |
-| x64 · .deb package (Debian/Ubuntu) | [`Aquilon.VPU.Map_1.2.1_amd64.deb`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.1/Aquilon.VPU.Map_1.2.1_amd64.deb) | 2.4 MB |
-| x64 · .rpm package (Fedora/RHEL) | [`Aquilon.VPU.Map-1.2.1-1.x86_64.rpm`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.1/Aquilon.VPU.Map-1.2.1-1.x86_64.rpm) | 2.4 MB |
+| x64 · .deb package (Debian/Ubuntu) | [`Aquilon.VPU.Map_1.3.0_amd64.deb`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.3.0/Aquilon.VPU.Map_1.3.0_amd64.deb) | 2.4 MB |
+| x64 · .rpm package (Fedora/RHEL) | [`Aquilon.VPU.Map-1.3.0-1.x86_64.rpm`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.3.0/Aquilon.VPU.Map-1.3.0-1.x86_64.rpm) | 2.4 MB |
 
 </details>
 
 Also in this release:
 
-- [`Aquilon.VPU.Map_1.2.1_aarch64.app.tar.gz`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.1/Aquilon.VPU.Map_1.2.1_aarch64.app.tar.gz) — Source tarball, 1.8 MB
-- [`Aquilon.VPU.Map_1.2.1_x64.app.tar.gz`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.2.1/Aquilon.VPU.Map_1.2.1_x64.app.tar.gz) — Source tarball, 1.9 MB
+- [`Aquilon.VPU.Map_1.3.0_universal.app.tar.gz`](https://github.com/stoatworks-labs/aquilon-vpu-map/releases/download/v1.3.0/Aquilon.VPU.Map_1.3.0_universal.app.tar.gz) — macOS app bundle (updater archive; the .dmg is the install), 3.7 MB
 
 All builds, checksums and release notes: [github.com/stoatworks-labs/aquilon-vpu-map/releases](https://github.com/stoatworks-labs/aquilon-vpu-map/releases).
 
