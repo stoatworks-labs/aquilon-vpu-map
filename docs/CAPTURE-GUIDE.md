@@ -5,8 +5,9 @@ anything about this tool, about AWJ, or about how the grid is drawn. You need
 about ten minutes on the device and a laptop on the same network.
 
 Since 2026-08-21 there is no Aquilon to read here. Everything the link grid
-claims is backed by three recorded configurations in [`../data`](../data), and
-the questions those three cannot answer are listed below. Each one is a
+claims is backed by four recorded captures in [`../data`](../data) — three
+configurations of one Aquilon C, and a fourth from a second chassis on
+2026-09-09 — and the questions those four cannot answer are listed below. Each one is a
 configuration somebody has to build on a real box.
 
 ---

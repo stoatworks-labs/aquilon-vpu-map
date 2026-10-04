@@ -7,7 +7,7 @@ person and dated by when each thing was learned — that date is usually the use
 Cross-cutting notes that are not specific to this repo live in
 [fleet-notes](https://github.com/stoatworks-labs/fleet-notes).
 
-*aquilon-vpu-map — PUBLIC web tool reading a LivePremier's VPU mixer allocation over AWJ; built and pushed 2026-08-20, but has NEVER completed a real-hardware read*
+*aquilon-vpu-map — PUBLIC web tool reading a LivePremier's VPU mixer allocation over AWJ; built and pushed 2026-08-20; first full live read through the tool itself 2026-08-21, on a real Aquilon C in three configurations, and a second chassis's whole-store pull added 2026-09-09*
 
 Placeholder raised 2026-08-20. **Scope now CONFIRMED against real hardware** the
 same day — the earlier "what does VPU mean" question is answered, don't re-ask it.
