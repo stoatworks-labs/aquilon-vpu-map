@@ -2,9 +2,10 @@
 
 > **AI-assisted project. Status: field testing.** This codebase was created with
 > [Claude](https://claude.com/claude-code) (Anthropic), directed and reviewed by a human
-> author. **It has read a real Aquilon C end to end**, in two different configurations —
-> the captures, the tests and the screenshots all come from that device, and the second
-> configuration corrected two things the first had made look settled.
+> author. **It has read a real Aquilon C end to end**, in three different configurations —
+> three of the four captures and the screenshots come from that device, and the second
+> configuration corrected two things the first had made look settled. The fourth capture
+> comes from the second chassis below.
 >
 > **Verified against a second chassis, 2026-09-09.** `scripts/probe-hardware.mjs`,
 > `scripts/profile-vpu.mjs` and `scripts/capture-config.mjs` were all run against a
@@ -145,7 +146,7 @@ read top to bottom the way an output link runs through it:
 
 ## Working without a device
 
-There is no Aquilon to read here any more, so the three recorded configurations in
+There is no Aquilon to read here any more, so the four recorded configurations in
 [`data/`](data) are the whole ground truth. Every one is offered in the app's
 **Recorded capture** picker, and the tests run off them.
 
@@ -266,7 +267,8 @@ If you want to be sure, `lib/awj.js` has no code path that emits `replace`.
 
 ## The recorded captures
 
-Three real reads from the same Aquilon C, deliberately different:
+Four real reads, deliberately different — the first three from one Aquilon C on
+2026-08-21, the fourth from a second chassis on 2026-09-09:
 
 - `data/aquilon-c-snapshot.json` — four screens, one layer each, every mixer `4K`,
   with one eight-slice native layer. **Load recorded capture** shows this one.
@@ -274,8 +276,11 @@ Three real reads from the same Aquilon C, deliberately different:
   screen with native plus two layers, and S2 a **5K** layer.
 - `data/aquilon-c-optimized.json` — S1 with three layers over three outputs,
   reporting `isOptimized`, plus the per-screen resource status.
+- `data/aquilon-c-dual-outputs.json` — the second chassis, lifted from its whole-store
+  pull: three single-output screens on dual-link HDMI outputs, and the only capture
+  that carries the outputs.
 
-The tests run against both, because the first alone supports assumptions the second
+The tests run against all four, because the first alone supports assumptions the second
 disproves — most importantly that a slice identifies one mixer. It does not: a layer
 spread over more than four output links is carried by a second mixer on different
 links, so a six-output screen reads as slices `[0,0,1,1]`.
