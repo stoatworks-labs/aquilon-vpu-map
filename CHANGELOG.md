@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 — 2026-10-06
+
+A dependency release; the map is unchanged.
+
+- The desktop app is built against **Tauri 2.11.6** and the rest of the Tauri family's
+  patch releases (`tauri`, `@tauri-apps/cli`).
+
 ## 1.3.0 — 2026-09-17
 
 Also in this release: **one universal macOS build** in place of the two per-arch ones,
