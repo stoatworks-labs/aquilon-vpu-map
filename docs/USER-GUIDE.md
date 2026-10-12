@@ -9,14 +9,16 @@ whole chassis on one screen.
 
 ![The chassis map, read from a real Aquilon C](screenshot.png)
 
-> **Before you rely on this:** it **has read a real Aquilon C end to end**, in two different
-> configurations. The captures, the tests and the screenshots all come from that device, and the
-> second configuration *corrected* two things the first had made look settled.
+> **Before you rely on this:** it **has read a real Aquilon C end to end**, in three different
+> configurations. Three of the four recorded captures and the screenshots come from that box, and
+> the second configuration *corrected* two things the first had made look settled. The fourth
+> capture comes from a second Aquilon C, which agreed with the model on 2026-09-09.
 >
-> Still untested: **Link setups** (devices 2–4), capacities other than 4K and 5K, combined VPUs,
-> **Optimized mode** and **Cut & Fill**. The model was re-checked against a second
-> Aquilon C on 2026-09-09 and held, but there's no frame here between visits, so those
-> are configurations somebody with hardware has to build.
+> Still untested: **Link setups** (devices 2–4), capacities other than 4K and 5K, combined VPUs
+> and **Cut & Fill**. **Optimized mode** has been read once, in the third capture (a screen of
+> three layers over three outputs reporting `isOptimized`), and the tests run off it. There's no
+> frame here between visits, so the untested ones are configurations somebody with hardware has
+> to build.
 >
 > This codebase was created with AI assistance, directed and reviewed by a human author.
 
@@ -45,8 +47,8 @@ the view you want before you press anything on the desk.
 **The desktop app** is the easiest way in: double-click it, nothing to install. macOS, Windows or
 Linux, about 2 MB, because it uses the system WebView rather than bundling a browser.
 
-> The macOS build is **not signed yet**, so Gatekeeper refuses it on first open with a message that
-> makes it sound like the file's damaged. **Right-click → Open**, once.
+> The macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so
+> SmartScreen warns once.
 
 Or run the server with `npm start` and open <http://localhost:8531>.
 

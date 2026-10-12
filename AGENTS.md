@@ -202,9 +202,10 @@ leaf-read-only limitation entirely.
   where the bare numbers sit at their own index — so DUAL is 1, 4K is 2, 5K is 4, 8K
   is 8. It was previously hard-coded with 8K at 4 and no entry for 5K at all, which a
   chassis reporting `5K` exposed. `DUAL` and `8K` themselves are still unseen.
-- **Combined VPUs** (§5.5.5, a screen over more than 8 outputs) and **Optimized mode**
-  (§5.5.6, which removes the 4-link boundary and would make the view's boundary line
-  wrong for that VPU). Neither has been seen; neither is handled.
+- **Combined VPUs** (§5.5.5, a screen over more than 8 outputs). Never seen, not
+  handled. **Optimized mode** (§5.5.6) was on this line until the third capture,
+  `data/aquilon-c-optimized.json` (2026-08-21), recorded it: `optimizedVpus()` handles
+  it, and `test/grid.test.js` runs off that capture.
 - Nothing has been tested on a **Link** setup, so devices 2–4 are untried. Note they
   are not absent from the protocol — they answer every path with `isAvailable:false`,
   so "does device 2 exist" has to be asked as "does it have any mixer fitted".

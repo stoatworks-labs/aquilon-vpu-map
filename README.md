@@ -147,7 +147,8 @@ Fill actually enabled, a screen too wide for one VPU). Each of those is a
 configuration somebody with hardware has to build.
 
 Still untested, then: **Link** setups (devices 2–4), capacities other than `4K` and
-`5K`, combined VPUs, Optimized mode and Cut & Fill. `capture-config.mjs --report`
+`5K`, combined VPUs and Cut & Fill. Optimized mode has been read once, in
+`data/aquilon-c-optimized.json`, and the tests run off it. `capture-config.mjs --report`
 lists what each open question needs and why it matters. If device time is short, do
 capacity-1, over-budget and Cut & Fill first.
 
