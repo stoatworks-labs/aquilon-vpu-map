@@ -45,7 +45,8 @@ the view you want before you press anything on the desk.
 ## Using it
 
 **The desktop app** is the easiest way in: double-click it, nothing to install. macOS, Windows or
-Linux, about 2 MB, because it uses the system WebView rather than bundling a browser.
+Linux, about 2 MB (nearer 4 MB for the universal macOS one), because it uses the system WebView
+rather than bundling a browser.
 
 > The macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so
 > SmartScreen warns once.

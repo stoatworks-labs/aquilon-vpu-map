@@ -22,7 +22,7 @@ Enough to use.
   screen is over budget.
 - **Knows when the scaling-engine boundary does not apply**, so the grid stops
   drawing a constraint the device is not enforcing.
-- Works with no device in front of you, from three recorded captures.
+- Works with no device in front of you, from four recorded captures.
 
 ## What it cannot do, and why
 
@@ -77,8 +77,9 @@ knowledge of it.
 
 ## How to extend it safely
 
-Every configuration seen so far has broken an assumption the previous one made
-look settled — three for three:
+Every configuration seen on the first chassis broke an assumption the previous
+one made look settled — three for three (the second chassis, on 2026-09-09,
+agreed with the model):
 
 - one capture said a slice identifies one mixer — the second disproved it
 - one said every mixer is `4K` — the second reported `5K`, which `capacityToLinks`
@@ -90,7 +91,7 @@ look settled — three for three:
 
 So: **add a capture to `data/` rather than editing an existing one**, and make
 the tests assert against all of them. Two disagreeing captures are worth far
-more than one tidy one. There are three now; keep them all.
+more than one tidy one. There are four now; keep them all.
 
 **Never commit screen names.** They are the operator's own labels and this repo
 is public. A capture refreshed from a live read would carry them in silently, so
@@ -119,6 +120,10 @@ toolchain) or Tauri, which the fleet already uses elsewhere and which gives a
 real app bundle. Unsigned macOS binaries are refused by Gatekeeper, so this needs
 the fleet's existing signing path rather than a bare `.tar.gz`.
 
+**Built in 1.1.0**, with Tauri. It doesn't bundle the server: Rust makes the AWJ
+connection itself and hands the page the same shape `/api/vpu` does. The macOS
+build is signed and notarised.
+
 ### A Chrome extension — possible, but worse, and now measured
 
 Attractive because an extension on the Web RCS page runs on the device's **own
@@ -145,7 +150,8 @@ install than the launcher, for the same result.
 
 ### Still open
 
-- A website entry on `/software`.
+- ~~A website entry on `/software`~~ **Done:**
+  <https://stoatworks-labs.com/software/aquilon-vpu-map/>.
 - A hosted demo, which can only ever show the recorded captures: a page served
   over HTTPS cannot reach a device on a private address, and the device has 443
   closed.

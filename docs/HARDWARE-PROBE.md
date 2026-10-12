@@ -151,18 +151,21 @@ screen on that box had one output. Saves `outputs.json`.
 
 Cheap, and expensive to come back for:
 
-- **A busier configuration.** The capture we have is uniform — every mixer `4K`,
-  every `channel` 0, one layer per screen beyond native. A box with mixed
-  capabilities (`DUAL`, `8K`), several numbered layers, or a screen using more than
-  8 outputs (**combined VPUs**, §5.5.5) would exercise paths nothing has tested.
+- **A busier configuration.** The four captures in `data/` have only ever shown
+  `4K` and `5K` mixers, and `channel` 0 on every one. A box with `DUAL` or `8K`
+  mixers, or a screen using more than 8 outputs (**combined VPUs**, §5.5.5), would
+  exercise paths nothing has tested.
 - **A staged change.** Make a preconfig edit in the Web RCS but **do not apply it**,
   then re-run. That populates the `new` mapping differently from `current` and is
-  the only way to see the diff view do real work.
+  the only way to see the diff view do real work. The base capture,
+  `data/aquilon-c-snapshot.json`, has one.
 - **Cut & Fill on a layer** (§5.5.7) — it doubles a layer's resources, so it should
   show as extra mixers. Nothing has confirmed how it appears.
 - **Optimized mode** (§5.5.6) — enabled when a screen uses ≥5 output links and ≥1
   layer of capacity 2. It removes the 4-link boundary, so the grid view's boundary
-  line would be wrong for that VPU. Worth knowing whether any property reports it.
+  line would be wrong for that VPU. A property does report it: `isOptimized`, per
+  screen under `resources/{current|new}/$screen/@items/S<n>/status`, read in
+  `data/aquilon-c-optimized.json`, and the grid drops the boundary there.
 - The **REST API** guide (`livepremier_rest_api_programmers_guide_v4.1.pdf`) shipped
   in the AW training bundle describes an interface this tool has never tried. If it
   exposes the resources tree and sends CORS headers, it changes the hosting answer.

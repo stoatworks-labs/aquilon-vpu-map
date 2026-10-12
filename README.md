@@ -181,8 +181,8 @@ one would change.
 
 **The desktop app** is the easiest way in: double-click it, nothing to install.
 Grab it from [Releases](https://github.com/stoatworks-labs/aquilon-vpu-map/releases):
-macOS, Windows or Linux, about 2 MB because it uses the system WebView rather
-than bundling a browser.
+macOS, Windows or Linux, about 2 MB (nearer 4 MB for the universal macOS one)
+because it uses the system WebView rather than bundling a browser.
 
 > The macOS builds are signed and notarised and open normally. The Windows
 > builds are unsigned, so SmartScreen warns once.
@@ -353,9 +353,9 @@ addresses, serial numbers, device names, screen names or labels**, so there's no
 in it that identifies you, your client or your show. Read it, then attach it to an
 issue if you're happy to share.
 
-The most useful ones are configurations unlike the one already recorded: mixed
+The most useful ones are configurations unlike the ones already recorded: mixed
 capabilities (`DUAL`, `8K`), **Link** setups with more than one device, Cut & Fill,
-Optimized mode, or a screen spread over more than 8 outputs. The script tells you which
+or a screen spread over more than 8 outputs. The script tells you which
 of these your box has.
 
 ## Probing hardware
