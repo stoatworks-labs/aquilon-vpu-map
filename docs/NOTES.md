@@ -636,6 +636,12 @@ is the same fix here. Everything below was read off the RS4 read-only (field kit
   answered "No VPU on this simulator — The device says it is a simulator (AQUILON
   NLC_CPLUS, firmware 6.1.60)…". A fresh session has no screen in service, so the
   per-screen cards were drawn only against the RS4-shaped responder.
+- **Then on the RS4 itself** (≈18:45 BST, Allan's OK, one read through the bridge at
+  8621d28, AWJ gets only, one socket, 127 ms): `NO_VPU_SUBTREE`, title "This firmware
+  does not report its VPU allocation", hint naming "AQUILON NLC_RS4 on firmware
+  6.1.60"; `isSimulated` false. S1 4K ×2 and S3 DUAL in service (S2 DISABLED, as at
+  17:59), staged room 19 DUAL · 9 4K · 4 5K with a mask 9 · 4 · 0 on both — the
+  same on every screen again, so said once.
 - **Not 6.1-only:** the 6.2.73 Aquilon C's store of 2026-09-09 carries the same
   `layerList` (257) and staged `layerCapabilityList` (4 DUAL left on S1). The bridge
   reads them only when there is no mixer map, because the map says more; showing the
