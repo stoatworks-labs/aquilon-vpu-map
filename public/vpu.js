@@ -185,9 +185,25 @@ export function summarise(mixers) {
  * further output links on the next VPU, and has never been captured.
  *
  * `$vpuLayer` — which looked like the reported grid, 8 scalers per VPU each
- * declaring 8 output pipes — DOES NOT EXIST on hardware: it answers E12, along
- * with `$pipe`. It is present but permanently empty on the simulator. The two
- * implementations expose different collections; trust the hardware.
+ * declaring 8 output pipes — has never reported anything, and which collection
+ * a box carries depends on its firmware, not on whether it is hardware:
+ *
+ *   6.2 hardware (Aquilon C, 6.2.73)   `$vpuMixer`; `$vpuLayer` and `$pipe` E12
+ *   6.1 hardware (Aquilon RS4, 6.1.60)  no `$vpuMixer` (E12); `$vpuLayer` and
+ *                                      `$pipe` present, every scaler at its
+ *                                      enums' first values — capability OFF,
+ *                                      usedInScreen S1, usedInLayer NATIVE,
+ *                                      pipes NONE / isUsed false — with three
+ *                                      screens on air (2026-10-16)
+ *   simulators                         either: as 6.1 hardware (6.2.73 in
+ *                                      August, the 6.1.60 C+ session), or a
+ *                                      fitted C MAX `$vpuMixer` (6.2.73 in
+ *                                      October) — the session decides
+ *
+ * So a box with no mixer map is not thereby a simulator; only its own
+ * `isSimulated` can say that. A 6.1.x box reports each screen's layer sizes and
+ * the staged room left by size instead (`lib/read.js` readScreenLayers), which
+ * is all it says about its VPU. Trust the device, and say which firmware.
  * ------------------------------------------------------------------------ */
 
 export const LINKS_PER_VPU = 8;

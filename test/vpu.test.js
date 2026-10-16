@@ -6,11 +6,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { summarise, diff, MIXER_IDS, MAX_MIXERS, parseMixerId } from '../public/vpu.js';
 import { AwjClient } from '../lib/awj.js';
-import { readMapping, readIdentity, readOutputs } from '../lib/read.js';
+import {
+  readMapping, readIdentity, readOutputs, readScreenStatus, readScreenLayers, noMixerMap,
+} from '../lib/read.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const snapshot = JSON.parse(
@@ -155,7 +158,7 @@ test('AWJ client frames requests and parses replies', async () => {
 });
 
 test('readMapping reports NO_VPU_SUBTREE when $vpuMixer is absent', async () => {
-  // This is exactly how the LivePremier simulator behaves.
+  // A simulator answers this way — and so does an Aquilon RS4 on 6.1.60.
   const server = fakeDevice({});
   const port = await listen(server);
   const client = new AwjClient({ host: '127.0.0.1', port, timeout: 2000 });
@@ -252,5 +255,186 @@ test('readOutputs reads the assigned outputs in full and the rest by name only',
   } finally {
     client.close();
     server.close();
+  }
+});
+
+/* ---------- firmware 6.1.x: no mixer map, per-screen figures instead ---------- */
+
+/**
+ * An Aquilon RS4 on 6.1.60, in AWJ spelling, as its store read on 2026-10-16
+ * at 11:32: identity, three screens in service, and each screen's resource
+ * layers and staged room. `$vpuMixer` is absent, as it is over AWJ on the box.
+ */
+function rs4Table() {
+  const D = 'DeviceObject/system/$device/@items/1';
+  const t = {
+    [`${D}/@props/dev`]: 'NLC_RS4',
+    [`${D}/@props/label`]: 'AQUILON',
+    [`${D}/@props/isSimulated`]: false,
+    [`${D}/version/@props/updater`]: '6.1.60',
+  };
+  const R = (side, id) => `DeviceObject/preconfig/resources/${side}/$screen/@items/${id}`;
+  const screens = { S1: ['4K', '4K'], S2: ['4K', '4K'], S3: ['DUAL'] };
+  for (const side of ['current', 'new']) {
+    for (let n = 1; n <= 24; n++) {
+      const id = `S${n}`;
+      const layers = screens[id];
+      t[`${R(side, id)}/status/@props/mode`] = layers ? 'FREESTYLE' : 'DISABLED';
+      if (!layers) continue;
+      Object.assign(t, {
+        [`${R(side, id)}/status/@props/layerCount`]: layers.length,
+        [`${R(side, id)}/status/@props/outputCount`]: 1,
+        [`${R(side, id)}/status/@props/usedOutputCapabilities`]: 1,
+        [`${R(side, id)}/status/@props/isOptimized`]: false,
+      });
+      // 257 slots, NATIVE first; only 1..n are on.
+      for (const k of ['NATIVE', ...Array.from({ length: 256 }, (_, i) => String(i + 1))]) {
+        const i = Number(k);
+        t[`${R(side, id)}/$layer/@items/${k}/status/@props/capability`] =
+          i >= 1 && i <= layers.length ? layers[i - 1] : 'OFF';
+      }
+      if (side !== 'new') continue;
+      for (const [capa, n, m] of [['DUAL', 15, 7], ['4K', 7, 3], ['3', 0, 0], ['5K', 3, 0]]) {
+        const c = `${R(side, id)}/$layerCapability/@items/${capa}/status/@props`;
+        t[`${c}/remainingLayerCapabilities`] = n;
+        t[`${c}/remainingLayerWithMaskCapabilities`] = m;
+      }
+    }
+  }
+  return t;
+}
+
+test('readIdentity reads isSimulated and the firmware, and leaves out what is absent', async () => {
+  const server = fakeDevice(rs4Table());
+  const port = await listen(server);
+  const client = new AwjClient({ host: '127.0.0.1', port, timeout: 2000 });
+  await client.connect();
+  try {
+    assert.deepEqual(await readIdentity(client), {
+      dev: 'NLC_RS4', label: 'AQUILON', isSimulated: false, firmware: '6.1.60',
+    });
+  } finally {
+    client.close();
+    server.close();
+  }
+});
+
+test('readScreenLayers reads each screen’s layer sizes, and the staged room', async () => {
+  const server = fakeDevice(rs4Table());
+  const port = await listen(server);
+  const client = new AwjClient({ host: '127.0.0.1', port, timeout: 4000 });
+  await client.connect();
+  try {
+    const running = await readScreenStatus(client, { which: 'current' });
+    const staged = await readScreenStatus(client, { which: 'new' });
+    assert.deepEqual(Object.keys(running), ['S1', 'S2', 'S3'], 'screens in service only');
+
+    const cur = await readScreenLayers(client, { which: 'current', status: running });
+    assert.deepEqual(cur.S1, {
+      layers: [{ layer: '1', capability: '4K' }, { layer: '2', capability: '4K' }],
+      room: [],
+    }, 'room is the staged side’s alone');
+    assert.deepEqual(cur.S3.layers, [{ layer: '1', capability: 'DUAL' }]);
+
+    const nw = await readScreenLayers(client, { which: 'new', status: staged });
+    assert.deepEqual(nw.S1.room, [
+      { capability: 'DUAL', layers: 15, withMask: 7 },
+      { capability: '4K', layers: 7, withMask: 3 },
+      { capability: '5K', layers: 3, withMask: 0 },
+    ], 'device order, and the always-empty `3` is dropped rather than named');
+    assert.deepEqual(nw.S3.room, nw.S1.room, 'every screen sees the box’s one pool');
+  } finally {
+    client.close();
+    server.close();
+  }
+});
+
+test('readScreenLayers stops at layerCount rather than reading 257 slots', async () => {
+  const table = rs4Table();
+  let reads = 0;
+  const counting = new Proxy(table, {
+    getOwnPropertyDescriptor(t, k) {
+      if (String(k).includes('/$layer/@items/')) reads += 1;
+      return Reflect.getOwnPropertyDescriptor(t, k);
+    },
+  });
+  const server = fakeDevice(counting);
+  const port = await listen(server);
+  const client = new AwjClient({ host: '127.0.0.1', port, timeout: 4000 });
+  await client.connect();
+  try {
+    const status = await readScreenStatus(client, { which: 'current' });
+    await readScreenLayers(client, { which: 'current', status });
+    // S1 and S2: NATIVE, 1, 2. S3: NATIVE, 1.
+    assert.equal(reads, 3 + 3 + 2);
+  } finally {
+    client.close();
+    server.close();
+  }
+});
+
+test('a device with no mixer map is worded from its own identity, never called a simulator by shape', () => {
+  const rs4 = noMixerMap(
+    { dev: 'NLC_RS4', label: 'AQUILON', isSimulated: false, firmware: '6.1.60' },
+    { inService: true },
+  );
+  assert.equal(rs4.title, 'This firmware does not report its VPU allocation');
+  // Word for word what src-tauri/src/read.rs says; its test pins the same string.
+  assert.equal(rs4.hint,
+    'AQUILON NLC_RS4 on firmware 6.1.60 answers E12 for $vpuMixer. The VPU is there; ' +
+    'firmware 6.1.x just does not say how its mixers are allocated, so there is no mixer ' +
+    'map to draw — the tool is working. What it does report is each screen’s ' +
+    'layer sizes and the room left, below.');
+  assert.match(rs4.hint, /below\.$/, 'points at the screens’ own figures');
+  assert.doesNotMatch(rs4.hint + rs4.title, /simulat/i, 'a live Aquilon is not a simulator');
+  assert.doesNotMatch(noMixerMap({ dev: 'NLC_RS4', firmware: '6.1.60' }).hint, /below/,
+    'no pointer when no screen is in service');
+
+  const sim = noMixerMap({ dev: 'NLC_CPLUS', label: 'AQUILON', isSimulated: true, firmware: '6.1.60' });
+  assert.equal(sim.title, 'No VPU on this simulator');
+  assert.match(sim.hint, /says it is a simulator \(AQUILON NLC_CPLUS, firmware 6\.1\.60\)/);
+
+  const c = noMixerMap({ dev: 'NLC_C', label: 'AQUILON', isSimulated: false, firmware: '6.2.73' });
+  assert.equal(c.title, 'No VPU mixer map on this device');
+  assert.match(c.hint, /AQUILON NLC_C on firmware 6\.2\.73 answers E12.*Aquilon C on 6\.2\.73 reports one/);
+  assert.doesNotMatch(c.hint, /simulator/);
+
+  const unknown = noMixerMap({});
+  assert.equal(unknown.title, 'No VPU mixer map reported');
+  assert.match(unknown.hint, /A simulator answers this way, and so does LivePremier firmware 6\.1\.60 on hardware/);
+});
+
+test('the bridge answers a 6.1.60 Aquilon with its identity’s sentence and the screens’ figures', async () => {
+  const device = fakeDevice(rs4Table());
+  const awjPort = await listen(device);
+  const probe = net.createServer();
+  const httpPort = await listen(probe);
+  await new Promise((r) => probe.close(r));
+
+  const child = spawn(process.execPath, [path.join(HERE, '..', 'server.js')], {
+    env: { ...process.env, PORT: String(httpPort), HOST: '127.0.0.1' },
+    stdio: ['ignore', 'pipe', 'inherit'],
+  });
+  try {
+    await new Promise((resolve, reject) => {
+      child.stdout.once('data', resolve);
+      child.once('exit', (code) => reject(new Error(`server exited ${code}`)));
+    });
+    const res = await fetch(`http://127.0.0.1:${httpPort}/api/vpu?ip=127.0.0.1&port=${awjPort}`);
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.ok, false);
+    assert.equal(body.code, 'NO_VPU_SUBTREE');
+    assert.equal(body.title, 'This firmware does not report its VPU allocation');
+    assert.doesNotMatch(body.hint, /simulat/i);
+    assert.equal(body.source.firmware, '6.1.60');
+    assert.equal(body.source.isSimulated, false);
+    assert.deepEqual(Object.keys(body.screenStatus.current), ['S1', 'S2', 'S3']);
+    assert.deepEqual(body.screenLayers.current.S1.layers.map((l) => l.capability), ['4K', '4K']);
+    assert.deepEqual(body.screenLayers.new.S2.room.map((r) => `${r.layers} ${r.capability}`),
+      ['15 DUAL', '7 4K', '3 5K']);
+  } finally {
+    child.kill();
+    device.close();
   }
 });

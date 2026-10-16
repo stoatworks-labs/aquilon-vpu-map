@@ -127,9 +127,10 @@ read top to bottom the way an output link runs through it:
 > [docs/CAPTURE-GUIDE.md](docs/CAPTURE-GUIDE.md) says what to do the next time a box
 > is reachable.
 >
-> `$vpuLayer`, which looked like the reported grid, **doesn't exist on hardware**. It
-> answers `E12`, and so does `$pipe`. Both are there but permanently empty on the
-> simulator. See [docs/HARDWARE-PROBE.md](docs/HARDWARE-PROBE.md).
+> `$vpuLayer`, which looked like the reported grid, has **never reported anything**.
+> On 6.2 hardware it answers `E12`, and so does `$pipe`; on a 6.1.60 Aquilon RS4 both
+> are there with every scaler at its defaults. See
+> [docs/HARDWARE-PROBE.md](docs/HARDWARE-PROBE.md).
 
 ## Working without a device
 
@@ -297,14 +298,24 @@ client here will connect to them, but the VPU mixer map is a LivePremier structu
 and other platforms answer `E12` for it. The app tells you so rather than showing an
 empty chassis.
 
-**The LivePremier simulator has no VPU map.** The path resolves as far as
-`$device/@items/1` and then stops. That's not a bug in the tool; the simulator has no
-processor boards to map.
+**Firmware 6.1.x has no VPU map.** An Aquilon RS4 on 6.1.60, three screens on air,
+answers `E12` for `$vpuMixer` (2026-10-16): it simply doesn't say how its mixers are
+allocated. What it does say is each screen's layers by size and, in the staged
+configuration, how many more of each size the box has room for — so that's what the
+app shows, under a banner that names the box and its firmware. The room is the box's
+one pool seen from each screen, so every screen shows the same figure.
 
-The simulator and real hardware don't expose the same collections at all. Hardware has
-`vpuMixerList` and neither `pipeList` nor `vpuLayerList`; the simulator has the
-opposite, which is a bold choice for a simulator. Anything checked only against the
-simulator should be re-checked on a device.
+**Some simulators have no VPU map either**, and the same E12 looks identical on the
+wire. So the app doesn't guess from the shape of the answer: it asks the device
+whether it's a simulator (`isSimulated`) and which firmware it runs
+(`version/@props/updater`), and words the banner from that. It used to call every
+such box a simulator, which is the one wrong thing to tell someone standing in front
+of a live switcher.
+
+Which collections a box carries depends on its firmware, not on whether it's
+hardware. A 6.2.73 Aquilon C has `vpuMixerList` and neither `pipeList` nor
+`vpuLayerList`; a 6.1.60 RS4 and the 6.2.73 simulator of August had the opposite. Say
+which firmware anything was checked on.
 
 ## Paths
 

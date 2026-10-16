@@ -81,15 +81,40 @@ async fn read_vpu(ip: String, device: String) -> Result<Value, String> {
         let current = match read::mapping_side(&mut a, "current", &device) {
             Some(v) => v,
             None => {
+                // No mixer map is not no figures: firmware 6.1.x reports each
+                // screen's layer sizes and, staged, the room left. Which
+                // sentence explains the absence is the identity's to choose.
+                let screen_layers = json!({
+                    "current": read::screen_layers(&mut a, "current", &screen_status["current"]),
+                    "new": read::screen_layers(&mut a, "new", &screen_status["new"]),
+                });
+                let in_service = screen_status["current"]
+                    .as_object()
+                    .map(|m| !m.is_empty())
+                    .unwrap_or(false);
+                let (title, hint) = read::no_mixer_map(&identity, in_service);
+                let mut source = json!({
+                    "kind": "device", "host": ip, "port": AWJ_PORT, "device": device,
+                });
+                if let (Some(src), Some(id)) = (source.as_object_mut(), identity.as_object()) {
+                    for (k, v) in id {
+                        src.insert(k.clone(), v.clone());
+                    }
+                }
                 return Ok(json!({
                     "ok": false,
                     "code": "NO_VPU_SUBTREE",
                     "error": "no $vpuMixer collection under the current mapping",
-                    "source": { "kind": "device", "host": ip, "port": AWJ_PORT, "device": device },
-                    "hint": "Reached the device, but it exposes no $vpuMixer collection. \
-                             The LivePremier simulator behaves this way — it has no \
-                             processor boards to map."
-                }))
+                    "title": title,
+                    "hint": hint,
+                    "source": source,
+                    "capturedAt": now_iso(),
+                    "elapsedMs": started.elapsed().as_millis() as u64,
+                    "screens": screens,
+                    "screenStatus": screen_status,
+                    "screenLayers": screen_layers,
+                    "outputs": outputs,
+                }));
             }
         };
         let staged = read::mapping_side(&mut a, "new", &device);
@@ -100,6 +125,7 @@ async fn read_vpu(ip: String, device: String) -> Result<Value, String> {
             "source": {
                 "kind": "device", "host": ip, "port": AWJ_PORT, "device": device,
                 "dev": identity.get("dev"), "label": identity.get("label"),
+                "isSimulated": identity.get("isSimulated"), "firmware": identity.get("firmware"),
             },
             "capturedAt": now_iso(),
             "elapsedMs": started.elapsed().as_millis() as u64,

@@ -138,13 +138,28 @@ screen on that box had ONE output, so the order over several is unconfirmed, and
 header. Do not loosen that check to make a capture look complete. Next box:
 `docs/CAPTURE-GUIDE.md` → "Validate on real hardware"; `probe-hardware.mjs` step 6.
 
-**`$vpuLayer` does not exist on hardware.** It answers `E12`, as does `$pipe`. Both are
-present-but-permanently-empty on the *simulator*. This is the general lesson:
+**`$vpuLayer` has never reported anything.** On 6.2 hardware it answers `E12`, as does
+`$pipe`. On an Aquilon RS4 at 6.1.60 (2026-10-16, three screens on air) both exist and
+every scaler reads its enums' first values — `capability` OFF, `usedInScreen` S1,
+`usedInLayer` NATIVE, pipes NONE — and `$vpuMixer` answers `E12`. This is the general
+lesson:
 
-> ⚠️ **The simulator and real hardware expose different collections.** Hardware has
-> `vpuMixerList` and no `pipeList`/`vpuLayerList`; the simulator has exactly the
-> opposite. Anything verified only against the simulator must be re-verified on a
-> device before it is trusted.
+> ⚠️ **Which collections a box exposes depends on its firmware, not on whether it is
+> hardware.** 6.2 hardware has `vpuMixerList` and no `pipeList`/`vpuLayerList`; 6.1.60
+> hardware has exactly the opposite, as did the 6.2.73 simulator in August. A box with
+> no mixer map is therefore **not** a simulator by shape — only its own `isSimulated`
+> can say so, and `noMixerMap()` (`lib/read.js`, mirrored as `no_mixer_map` in
+> `read.rs`) words the banner from that and the firmware. Never put "the simulator
+> behaves this way" back into a message a live box can reach. Anything verified on one
+> firmware must say which.
+
+**On 6.1.x the per-screen figures are all there is.** `readScreenLayers` reads
+`preconfig/resources/<side>/$screen/@items/S<n>/$layer/@items/<k>/status/@props/capability`
+(257 slots, NATIVE first; read until `layerCount` are found) and, staged only,
+`$layerCapability/@items/<capa>/status/@props/remaining{Layer,LayerWithMask}Capabilities`.
+The room is the same on every screen in service — the box's pool, not a share — and
+a capability with none left (the RS4's always-zero `3`) is dropped, not named. The
+bridge reads these only when there is no mixer map, so a 6.2 read costs what it did.
 
 `deriveLinkGrid()` remains as the fallback for data with no pipe allocation, and
 `buildLinkGrid()` reports which of the two it used via `placement`. The UI's wording
@@ -184,6 +199,10 @@ leaf-read-only limitation entirely.
   responder replaying the capture over a real socket.
 - The live request path end to end against the **LivePremier simulator**: connects,
   reads identity, probes the VPU subtree, and reports its absence correctly.
+- The no-mixer-map path against an RS4-shaped responder (6.1.60 identity, three
+  screens, layers and room as the box's store read on 2026-10-16), through the real
+  bridge process: the identity's sentence, never "simulator", and the screens'
+  figures.
 - **A full live read from a real Aquilon C through this code** (2026-08-21): the server
   bridge, the UI, the link grid and the budget view, ~750 ms for 64 mixers over AWJ.
 - Both themes, and the failure states (unreachable host, device without a VPU map).
@@ -226,8 +245,12 @@ leaf-read-only limitation entirely.
 ## The simulator is not a test target for VPU
 
 `AW LivePremier Simulator.app` speaks AWJ correctly on 10606 and is genuinely useful for
-transport work, but it exposes **no `$vpuMixer` collection**. The path resolves to
-`$device/@items/1` and then answers `E12`. It has no processor boards to map.
+transport work, but a session may expose **no `$vpuMixer` collection** (the 6.2.73 session
+of August, the 6.1.60 C+ session): the path resolves to `$device/@items/1` and then
+answers `E12`. A C MAX session in October reported 64 fitted mixers, so check rather
+than assume. Either way it allocates nothing worth mapping, and a 6.1.60 *hardware* box
+answers exactly as the empty sessions do — which is why the message comes from
+`isSimulated`, not from the E12.
 
 Reproduce with `{"op":"get","path":"…/$device/@items/1/$vpuMixer"}` + `0x04`.
 

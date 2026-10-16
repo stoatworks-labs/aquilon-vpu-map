@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+**A box with no mixer map is no longer called a simulator.** An Aquilon RS4 on firmware
+6.1.60, three screens on air, answers `E12` for `$vpuMixer`, and the app told the operator
+"The LivePremier simulator behaves this way — it has no processor boards to map". The
+banner is now worded from the device's own identity: `isSimulated` and the firmware
+(`version/@props/updater`) are read with the model, and a 6.1.x box is told its firmware
+does not report its VPU allocation, naming the box and the version; a simulator is told
+it is one; anything else gets a sentence that claims neither.
+
+- **What 6.1.x does report is shown.** Each screen in service, with its layers by size
+  ("4K ×2") and, staged, the room left by size ("room for 15 DUAL · 7 4K · 3 5K") — the
+  box's one pool as seen from each screen. Read only when there is no mixer map, so a
+  6.2 read costs what it did.
+- The status line names the firmware, and "simulator" when the device says it is one.
+- Same in the desktop app (`read.rs`), word for word; both suites pin the sentence.
+
 ## 1.3.1 — 2026-10-06
 
 A dependency release; the map is unchanged.

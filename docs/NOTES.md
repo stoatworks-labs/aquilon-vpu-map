@@ -593,3 +593,48 @@ adds up to its own figures. **Still open: the ORDER over several outputs** (ever
 screen there had one), and the `mapping`/`control`/`$plug` AWJ spellings. Probe step 6
 + CAPTURE-GUIDE "Validate on real hardware" are the note for the next box.
 
+## Firmware 6.1.60: no mixer map, and the box is not a simulator (2026-10-16)
+
+LivePremier Plus's VPU Map told an Aquilon RS4 on 6.1.60 (three screens on air) it was
+a simulator; this tool would have said the same — `NO_VPU_SUBTREE`'s hint was "The
+LivePremier simulator behaves this way". Plus fixed its panel (ae6aa87, 85a7171); this
+is the same fix here. Everything below was read off the RS4 read-only (field kit AWJ
+`get`s and `GET /api/stores/device`, `~/dev/aquilon-field-test/results/*2026-10-16*`).
+
+- **No mixer map on the wire.** `$vpuMixer` answers E12. `$vpuLayer` (32
+  `PROC_<1-4>_SCALER_<1-8>`) and `$pipe` (64) both exist, every scaler at its enums'
+  first values (`isAvailable`/`isEnabled` false, `capability` OFF, `usedInScreen` S1,
+  `usedInLayer` NATIVE, every `usedOnOutPipe` NONE), every pipe `isUsed` false. The
+  6.1.60 vendor bundle mentions those lists only in generated reducers; its page never
+  reads them. So it is the same shape as the August simulator — on hardware.
+- **Identity says which.** `system/$device/@items/1/@props/isSimulated` is false in the
+  store; `version/@props/updater` answered `6.1.60` over AWJ (and `6.2.73` on the
+  Aquilon C on 09-09). `readIdentity` now reads both; `noMixerMap(identity, {inService})`
+  words title and hint from them, and `read.rs`'s `no_mixer_map` says the same, pinned
+  string for string in both suites. The neutral sentence (no identity) names both
+  causes; nothing calls a box a simulator unless `isSimulated` is true.
+- **What 6.1.x reports instead is per screen.** `preconfig/resources/<side>/$screen/
+  @items/S<n>/$layer/@items/<k>/status/@props/capability` — 257 slots (NATIVE, 1-256),
+  `4K`/`DUAL`/`OFF`; read until `layerCount` non-OFF ones are found, so S1 costs three
+  reads, not 257. Staged only: `$layerCapability/@items/<DUAL|4K|3|5K>/status/@props/
+  {remainingLayerCapabilities,remainingLayerWithMaskCapabilities}` — 15/7, 7/3, 0/0,
+  3/0 on S1, S2 and S3 alike at 11:32 (19/9/4 at 17:59), so it is the box's pool. `3` is
+  always 0 and dropped, not named. The AWJ spellings (`$layer`, `$layerCapability`)
+  follow the mechanical rule from the store's `layerList`/`layerCapabilityList`.
+- **The bridge** reads those only when `$vpuMixer` is absent and answers `ok: false`,
+  `NO_VPU_SUBTREE`, with `title`, `hint`, `source` (identity included), `screenStatus`,
+  `screenLayers` and `outputs`. The page draws a "What this firmware does report" card
+  per screen instead of the chassis. Tested through the real `server.js` process
+  against an RS4-shaped responder.
+- **Proved on the 6.1.60 simulator** (the C+ session, `NLC_CPLUS`, same day), AWJ
+  `get` only: `isSimulated` true, `version/@props/updater` `6.1.60`; `$layer` answers
+  for NATIVE and 1-256 and E12 at 257; `$layerCapability` answers for DUAL and 4K and
+  E12 for 8K; `$vpuMixer` E12; `$vpuLayer` and `$pipe` at their defaults. The bridge
+  answered "No VPU on this simulator — The device says it is a simulator (AQUILON
+  NLC_CPLUS, firmware 6.1.60)…". A fresh session has no screen in service, so the
+  per-screen cards were drawn only against the RS4-shaped responder.
+- **Not 6.1-only:** the 6.2.73 Aquilon C's store of 2026-09-09 carries the same
+  `layerList` (257) and staged `layerCapabilityList` (4 DUAL left on S1). The bridge
+  reads them only when there is no mixer map, because the map says more; showing the
+  room beside a 6.2 map is a possible addition, not done.
+

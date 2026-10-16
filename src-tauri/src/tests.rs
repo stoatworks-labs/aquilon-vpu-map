@@ -115,7 +115,7 @@ fn only_ever_sends_get() {
 
 #[test]
 fn a_device_with_no_vpu_collection_reports_none() {
-    // Exactly how the LivePremier simulator behaves.
+    // A simulator answers this way — and so does an Aquilon RS4 on 6.1.60.
     let (port, _rx) = fake_device(HashMap::new());
     let mut a = connect(port);
     assert!(crate::read::mapping_side(&mut a, "current", "1").is_none());
@@ -237,4 +237,121 @@ fn reads_a_real_device() {
     println!("mixers: {} fitted, {} enabled, {} slots", fitted, enabled, obj.len());
     assert_eq!(obj.len(), 64, "always 64 slots in the model");
     assert!(fitted > 0, "something is fitted");
+}
+
+/// An Aquilon RS4 on 6.1.60 in AWJ spelling, as its store read on 2026-10-16:
+/// the same table `test/vpu.test.js` serves. No `$vpuMixer`, as on the box.
+fn rs4_table() -> HashMap<String, serde_json::Value> {
+    use serde_json::json;
+    let d = "DeviceObject/system/$device/@items/1";
+    let mut t = HashMap::new();
+    t.insert(format!("{d}/@props/dev"), json!("NLC_RS4"));
+    t.insert(format!("{d}/@props/label"), json!("AQUILON"));
+    t.insert(format!("{d}/@props/isSimulated"), json!(false));
+    t.insert(format!("{d}/version/@props/updater"), json!("6.1.60"));
+    let screens: [(&str, &[&str]); 3] = [("S1", &["4K", "4K"]), ("S2", &["4K", "4K"]), ("S3", &["DUAL"])];
+    for side in ["current", "new"] {
+        for n in 1..=24 {
+            let id = format!("S{n}");
+            let r = format!("DeviceObject/preconfig/resources/{side}/$screen/@items/{id}");
+            let layers = screens.iter().find(|(s, _)| *s == id).map(|(_, l)| *l);
+            let Some(layers) = layers else {
+                t.insert(format!("{r}/status/@props/mode"), json!("DISABLED"));
+                continue;
+            };
+            t.insert(format!("{r}/status/@props/mode"), json!("FREESTYLE"));
+            t.insert(format!("{r}/status/@props/layerCount"), json!(layers.len()));
+            for k in std::iter::once("NATIVE".to_string()).chain((1..=256).map(|i| i.to_string())) {
+                let i: usize = k.parse().unwrap_or(0);
+                let c = if i >= 1 && i <= layers.len() { layers[i - 1] } else { "OFF" };
+                t.insert(format!("{r}/$layer/@items/{k}/status/@props/capability"), json!(c));
+            }
+            if side == "new" {
+                for (capa, n, m) in [("DUAL", 15, 7), ("4K", 7, 3), ("3", 0, 0), ("5K", 3, 0)] {
+                    let c = format!("{r}/$layerCapability/@items/{capa}/status/@props");
+                    t.insert(format!("{c}/remainingLayerCapabilities"), json!(n));
+                    t.insert(format!("{c}/remainingLayerWithMaskCapabilities"), json!(m));
+                }
+            }
+        }
+    }
+    t
+}
+
+#[test]
+fn identity_reads_is_simulated_and_the_firmware() {
+    let (port, _rx) = fake_device(rs4_table());
+    let mut a = connect(port);
+    assert_eq!(
+        crate::read::identity(&mut a),
+        serde_json::json!({
+            "dev": "NLC_RS4", "label": "AQUILON", "isSimulated": false, "firmware": "6.1.60"
+        })
+    );
+}
+
+#[test]
+fn screen_layers_reads_sizes_and_the_staged_room() {
+    let (port, _rx) = fake_device(rs4_table());
+    let mut a = connect(port);
+    let running = crate::read::screen_status(&mut a, "current");
+    let staged = crate::read::screen_status(&mut a, "new");
+    assert_eq!(running.as_object().unwrap().keys().collect::<Vec<_>>(), vec!["S1", "S2", "S3"]);
+
+    let cur = crate::read::screen_layers(&mut a, "current", &running);
+    assert_eq!(
+        cur["S1"],
+        serde_json::json!({
+            "layers": [{ "layer": "1", "capability": "4K" }, { "layer": "2", "capability": "4K" }],
+            "room": []
+        })
+    );
+    let nw = crate::read::screen_layers(&mut a, "new", &staged);
+    assert_eq!(
+        nw["S3"]["room"],
+        serde_json::json!([
+            { "capability": "DUAL", "layers": 15, "withMask": 7 },
+            { "capability": "4K", "layers": 7, "withMask": 3 },
+            { "capability": "5K", "layers": 3, "withMask": 0 }
+        ]),
+        "device order, and the always-empty `3` dropped"
+    );
+}
+
+#[test]
+fn no_mixer_map_is_worded_from_identity_and_matches_the_node_bridge() {
+    use crate::read::no_mixer_map;
+    use serde_json::json;
+
+    let (title, hint) = no_mixer_map(
+        &json!({ "dev": "NLC_RS4", "label": "AQUILON", "isSimulated": false, "firmware": "6.1.60" }),
+        true,
+    );
+    assert_eq!(title, "This firmware does not report its VPU allocation");
+    // Word for word what lib/read.js says; test/vpu.test.js pins the same opening.
+    assert_eq!(
+        hint,
+        "AQUILON NLC_RS4 on firmware 6.1.60 answers E12 for $vpuMixer. The VPU is there; \
+         firmware 6.1.x just does not say how its mixers are allocated, so there is no mixer \
+         map to draw \u{2014} the tool is working. What it does report is each screen\u{2019}s \
+         layer sizes and the room left, below."
+    );
+    assert!(!hint.to_lowercase().contains("simulat"), "a live Aquilon is not a simulator");
+
+    let (title, hint) = no_mixer_map(
+        &json!({ "dev": "NLC_CPLUS", "label": "AQUILON", "isSimulated": true, "firmware": "6.1.60" }),
+        false,
+    );
+    assert_eq!(title, "No VPU on this simulator");
+    assert!(hint.starts_with("The device says it is a simulator (AQUILON NLC_CPLUS, firmware 6.1.60)"));
+
+    let (title, hint) = no_mixer_map(
+        &json!({ "dev": "NLC_C", "label": "AQUILON", "isSimulated": false, "firmware": "6.2.73" }),
+        false,
+    );
+    assert_eq!(title, "No VPU mixer map on this device");
+    assert!(hint.contains("An Aquilon C on 6.2.73 reports one; an Aquilon RS4 on 6.1.60 does not."));
+
+    let (title, _) = no_mixer_map(&json!({ "dev": null, "label": null }), false);
+    assert_eq!(title, "No VPU mixer map reported");
 }

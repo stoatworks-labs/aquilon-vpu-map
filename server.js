@@ -12,7 +12,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { AwjClient } from './lib/awj.js';
-import { readMapping, readIdentity, readScreenNames, readScreenStatus, readOutputs } from './lib/read.js';
+import {
+  readMapping, readIdentity, readScreenNames, readScreenStatus, readScreenLayers, readOutputs,
+  noMixerMap,
+} from './lib/read.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(HERE, 'public');
@@ -76,7 +79,37 @@ async function handleRead(req, res, url) {
     // Which screen, region and plug each output is, for the header over the
     // grid's columns. Absent on a firmware that spells the paths differently.
     const outputs = await readOutputs(client);
-    const current = await readMapping(client, { which: 'current', device });
+
+    let current;
+    try {
+      current = await readMapping(client, { which: 'current', device });
+    } catch (err) {
+      if (err.code !== 'NO_VPU_SUBTREE') throw err;
+      // No mixer map is not no figures. Firmware 6.1.x reports each screen's
+      // layer sizes and, staged, the room left; that is all it says about its
+      // VPU, so it is what the page shows. Which sentence explains the
+      // absence is the device's identity to choose, never this probe's.
+      const screenLayers = {
+        current: await readScreenLayers(client, { which: 'current', status: screenStatus.current }),
+        new: await readScreenLayers(client, { which: 'new', status: screenStatus.new }),
+      };
+      const inService = Object.keys(screenStatus.current).length > 0;
+      const { title, hint } = noMixerMap(identity, { inService });
+      return sendJson(res, 200, {
+        ok: false,
+        code: 'NO_VPU_SUBTREE',
+        error: String(err.message || err),
+        title,
+        hint,
+        source: { kind: 'device', host, port, device, ...identity },
+        capturedAt: new Date().toISOString(),
+        elapsedMs: Date.now() - started,
+        screens,
+        screenStatus,
+        screenLayers,
+        outputs,
+      });
+    }
 
     // The staged mapping is the same size again; only read it if it exists.
     let next = null;
@@ -99,17 +132,11 @@ async function handleRead(req, res, url) {
       new: next,
     });
   } catch (err) {
-    const code = err.code === 'NO_VPU_SUBTREE' ? 'NO_VPU_SUBTREE' : err.code || 'READ_FAILED';
-    const status = code === 'NO_VPU_SUBTREE' ? 200 : 502;
-    sendJson(res, status, {
+    sendJson(res, 502, {
       ok: false,
-      code,
+      code: err.code || 'READ_FAILED',
       error: String(err.message || err),
       source: { kind: 'device', host, port, device },
-      hint:
-        code === 'NO_VPU_SUBTREE'
-          ? 'Reached the device, but it exposes no $vpuMixer collection. The LivePremier simulator behaves this way — it has no processor boards to map.'
-          : undefined,
     });
   } finally {
     client.close();

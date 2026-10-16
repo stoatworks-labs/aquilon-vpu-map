@@ -43,12 +43,149 @@ fn mapping(which: &str, device: &str) -> String {
 }
 
 /// Device identity — cheap, and confirms this is a LivePremier.
+///
+/// `isSimulated` is the simulator telling on itself, and the only thing that
+/// can: a 6.1.60 Aquilon reports no mixer map exactly as a simulator does.
+/// `version/@props/updater` is the firmware ("6.2.73", "6.1.60"). Absent
+/// fields are left out, never guessed.
 pub fn identity(a: &mut Awj) -> Value {
-    let p = "DeviceObject/system/$device/@items/1/@props";
-    json!({
-        "dev": a.try_get(&format!("{p}/dev")),
-        "label": a.try_get(&format!("{p}/label")),
-    })
+    let p = "DeviceObject/system/$device/@items/1";
+    let mut out = Map::new();
+    out.insert("dev".into(), a.try_get(&format!("{p}/@props/dev")).unwrap_or(Value::Null));
+    out.insert("label".into(), a.try_get(&format!("{p}/@props/label")).unwrap_or(Value::Null));
+    if let Some(Value::Bool(b)) = a.try_get(&format!("{p}/@props/isSimulated")) {
+        out.insert("isSimulated".into(), Value::Bool(b));
+    }
+    if let Some(Value::String(f)) = a.try_get(&format!("{p}/version/@props/updater")) {
+        if !f.is_empty() {
+            out.insert("firmware".into(), Value::String(f));
+        }
+    }
+    Value::Object(out)
+}
+
+/// Firmware 6.1.x: no mixer map, per-screen layer figures instead.
+pub fn is_firmware_61(firmware: Option<&str>) -> bool {
+    firmware.map(|f| f.starts_with("6.1.")).unwrap_or(false)
+}
+
+/// What to tell the operator when there is no mixer map: `(title, hint)`.
+///
+/// The device's identity chooses the sentence, never the shape of the answer:
+/// an Aquilon RS4 on 6.1.60 with its screens on air was once told it was a
+/// simulator. Word-for-word the same as `noMixerMap` in `lib/read.js`; change
+/// both.
+pub fn no_mixer_map(identity: &Value, in_service: bool) -> (String, String) {
+    let s = |k: &str| identity.get(k).and_then(Value::as_str).filter(|v| !v.is_empty());
+    let simulated = identity.get("isSimulated").and_then(Value::as_bool);
+    let firmware = s("firmware");
+    let name = [s("label"), s("dev")].iter().flatten().cloned().collect::<Vec<_>>().join(" ");
+    let below = if in_service {
+        " What it does report is each screen\u{2019}s layer sizes and the room left, below."
+    } else {
+        ""
+    };
+
+    if simulated == Some(true) {
+        let who = if name.is_empty() {
+            String::new()
+        } else {
+            match firmware {
+                Some(f) => format!(" ({name}, firmware {f})"),
+                None => format!(" ({name})"),
+            }
+        };
+        return (
+            "No VPU on this simulator".into(),
+            format!(
+                "The device says it is a simulator{who}, and it exposes no $vpuMixer collection. \
+                 This simulator allocates nothing, so there is no mixer map to draw \u{2014} \
+                 the tool is working."
+            ),
+        );
+    }
+    if simulated == Some(false) || !name.is_empty() {
+        let mut bx = if name.is_empty() { "The device".to_string() } else { name };
+        if let Some(f) = firmware {
+            bx = format!("{bx} on firmware {f}");
+        }
+        if is_firmware_61(firmware) {
+            return (
+                "This firmware does not report its VPU allocation".into(),
+                format!(
+                    "{bx} answers E12 for $vpuMixer. The VPU is there; firmware 6.1.x just does \
+                     not say how its mixers are allocated, so there is no mixer map to draw \
+                     \u{2014} the tool is working.{below}"
+                ),
+            );
+        }
+        return (
+            "No VPU mixer map on this device".into(),
+            format!(
+                "{bx} answers E12 for $vpuMixer, so there is no mixer map to draw. An Aquilon C \
+                 on 6.2.73 reports one; an Aquilon RS4 on 6.1.60 does not.{below}"
+            ),
+        );
+    }
+    (
+        "No VPU mixer map reported".into(),
+        format!(
+            "Reached the device, but it exposes no $vpuMixer collection, so there is no mixer \
+             map to draw. A simulator answers this way, and so does LivePremier firmware 6.1.60 \
+             on hardware.{below}"
+        ),
+    )
+}
+
+/// The device's LAYER_CAPABILITIES enum, less OFF — `public/vpu.js` has the list.
+const LAYER_CAPABILITIES: [&str; 8] = ["DUAL", "4K", "3", "5K", "5", "6", "7", "8K"];
+
+/// What each screen in service spends, layer by layer, and (staged) the room
+/// left by size — all that firmware 6.1.x says about its VPU. The desktop
+/// equivalent of `readScreenLayers` in `lib/read.js`, which has the paths and
+/// the reasoning. A screen's list has 257 slots (NATIVE, 1-256), so it is read
+/// only until `layerCount` of them are found.
+pub fn screen_layers(a: &mut Awj, which: &str, status: &Value) -> Value {
+    let mut out = Map::new();
+    let empty = Map::new();
+    for (id, st) in status.as_object().unwrap_or(&empty) {
+        let b = format!("DeviceObject/preconfig/resources/{which}/$screen/@items/{id}");
+        let want = st.get("layerCount").and_then(Value::as_u64);
+        let mut layers = Vec::new();
+        let keys = std::iter::once("NATIVE".to_string()).chain((1..=256).map(|n| n.to_string()));
+        for key in keys {
+            if want.map(|w| layers.len() as u64 >= w).unwrap_or(false) {
+                break;
+            }
+            match a.try_get(&format!("{b}/$layer/@items/{key}/status/@props/capability")) {
+                None => break, // past the end, or not this firmware's spelling
+                Some(Value::String(c)) if c != "OFF" && !c.is_empty() => {
+                    layers.push(json!({ "layer": key, "capability": c }));
+                }
+                Some(_) => {}
+            }
+        }
+        let mut room = Vec::new();
+        if which == "new" {
+            for capa in LAYER_CAPABILITIES {
+                let c = format!("{b}/$layerCapability/@items/{capa}/status/@props");
+                let count = a
+                    .try_get(&format!("{c}/remainingLayerCapabilities"))
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                if count == 0 {
+                    continue;
+                }
+                let with_mask = a
+                    .try_get(&format!("{c}/remainingLayerWithMaskCapabilities"))
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                room.push(json!({ "capability": capa, "layers": count, "withMask": with_mask }));
+            }
+        }
+        out.insert(id.clone(), json!({ "layers": layers, "room": room }));
+    }
+    Value::Object(out)
 }
 
 /// The operator's own screen names. `$screen`, NOT `$screenAuxGroup` — the
@@ -139,7 +276,8 @@ pub fn outputs(a: &mut Awj) -> Value {
 }
 
 /// One side of the mapping. `None` means the device has no `$vpuMixer`
-/// collection at all — the simulator behaves this way.
+/// collection at all — a simulator answers this way, and so does an Aquilon on
+/// firmware 6.1.x; `no_mixer_map` lets the device's identity say which.
 pub fn mapping_side(a: &mut Awj, which: &str, device: &str) -> Option<Value> {
     let mut out = Map::new();
     let mut first = true;

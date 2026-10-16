@@ -31,6 +31,8 @@ const els = {
   status: $('statusText'),
   source: $('sourceText'),
   banner: $('banner'),
+  reported: $('reported'),
+  reportedScreens: $('reportedScreens'),
   results: $('results'),
   stats: $('stats'),
   chassis: $('chassis'),
@@ -772,6 +774,69 @@ function renderScreenStatus(screenStatus, stagedStatus, colours) {
   return { exceeding };
 }
 
+/** A screen's layers by size, in the order they first appear: "4K ×2, DUAL". */
+function layerSizes(layers) {
+  const counts = new Map();
+  for (const { capability } of layers || []) counts.set(capability, (counts.get(capability) || 0) + 1);
+  return [...counts].map(([c, n]) => (n > 1 ? `${c} \u00d7${n}` : c)).join(', ');
+}
+
+/**
+ * A device with no mixer map — firmware 6.1.x, or a simulator — still reports
+ * each screen's layer sizes and, staged, the room left by size. That is the
+ * whole of what it says about its VPU, so it is drawn on its own, with no
+ * chassis or grid pretending to more.
+ */
+function renderReported(body) {
+  const status = (body.screenStatus || {}).current || {};
+  const layers = body.screenLayers || {};
+  const entries = Object.entries(status);
+  if (!entries.length) {
+    els.reported.hidden = true;
+    return;
+  }
+  const colours = new Map(entries.map(([id], i) => [id, `c${(i % 6) + 1}`]));
+  els.reported.hidden = false;
+  els.reportedScreens.replaceChildren(
+    ...entries.map(([id, st]) => {
+      const running = (layers.current || {})[id] || { layers: [] };
+      const staged = (layers.new || {})[id] || { layers: [], room: [] };
+      const sizes = layerSizes(running.layers);
+      const stagedSizes = layerSizes(staged.layers);
+      const room = staged.room || [];
+      return el(
+        'div',
+        { class: `sstat ${colours.get(id)}` },
+        el('span', { class: 'sid', text: screenWithName(id) }),
+        el('span', { class: 'sfig' },
+          el('b', { text: String(st.layerCount ?? '—') }),
+          ` layer${st.layerCount === 1 ? '' : 's'}`,
+          sizes ? ': ' : '',
+          sizes ? el('b', { text: sizes }) : null,
+        ),
+        el('span', { class: 'sfig' },
+          el('b', { text: String(st.usedOutputCapabilities ?? '—') }),
+          ` output link${st.usedOutputCapabilities === 1 ? '' : 's'} over `,
+          el('b', { text: String(st.outputCount ?? '—') }),
+          ` output${st.outputCount === 1 ? '' : 's'}`,
+        ),
+        stagedSizes !== sizes
+          ? el('span', { class: 'sfig', text: `staged: ${stagedSizes || 'no layers'}` })
+          : null,
+        el('span', {
+          class: 'snote',
+          title: room.length
+            ? 'With a mask: ' + room.map((r) => `${r.withMask} ${r.capability}`).join(' \u00b7 ')
+            : null,
+          text: room.length
+            ? 'room for ' + room.map((r) => `${r.layers} ${r.capability}`).join(' \u00b7 ')
+            : 'no room reported',
+        }),
+      );
+    }),
+  );
+}
+
 function renderDiff(changes, mixers, colours, comparing) {
   els.diffTitle.textContent = comparing ? 'Changed since the saved reading' : 'Staged changes';
   els.diffLede.textContent = comparing
@@ -851,6 +916,7 @@ function renderDetail(mixers) {
 
 function render(payload) {
   state.payload = payload;
+  els.reported.hidden = true;
   SCREEN_NAMES = payload.screens || {};
 
   const current = payload.current || {};
@@ -920,7 +986,8 @@ async function readVpu(ip, device) {
 function describeSource(src, capturedAt) {
   const when = capturedAt ? new Date(capturedAt).toLocaleString() : '';
   if (!src) return when;
-  const name = [src.dev, src.label].filter(Boolean).join(' · ');
+  const name = [src.dev, src.label, src.firmware, src.isSimulated ? 'simulator' : null]
+    .filter(Boolean).join(' · ');
   const where = src.kind === 'device' ? src.host : 'recorded capture';
   return [name, where, when].filter(Boolean).join(' — ');
 }
@@ -938,12 +1005,19 @@ async function readDevice(ip, device, { quiet = false } = {}) {
 
     if (!body.ok) {
       if (body.code === 'NO_VPU_SUBTREE') {
-        setStatus('error', 'No VPU map on this device');
+        // Not a failure: the device answered, and its identity says why there
+        // is no map. What it does report is drawn instead of the chassis.
+        localStorage.setItem(IP_KEY, ip);
+        SCREEN_NAMES = body.screens || {};
+        els.results.hidden = true;
+        els.tools.hidden = true;
+        setStatus('live', 'Live \u00b7 no mixer map', describeSource(body.source, body.capturedAt));
         showBanner(
           'warn',
-          'Connected, but this device exposes no VPU mixer map.',
+          body.title || 'Connected, but this device exposes no VPU mixer map.',
           body.hint || 'The $vpuMixer collection is absent.',
         );
+        renderReported(body);
       } else {
         setStatus('error', 'Read failed');
         showBanner('error', `Could not read ${ip}.`, body.error || 'Unknown error.');

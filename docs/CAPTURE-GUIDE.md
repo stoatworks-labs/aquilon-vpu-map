@@ -190,9 +190,9 @@ node scripts/probe-hardware.mjs <ip>
 It sweeps for paths that do not exist yet. The one that matters is **`$vpuLayer`**
 — eight scalers per VPU, each declaring which output pipes it drives. That is
 the grid itself, reported rather than derived. On 6.2 hardware it answers `E12`;
-on the simulator it exists but is permanently empty. If a firmware ever populates
-it, the rows stop being our ordering and become the device's, and the probe says
-so in capitals.
+on 6.1.60 hardware (an RS4) and on some simulator sessions it exists with every
+scaler at its defaults. If a firmware ever populates it, the rows stop being our
+ordering and become the device's, and the probe says so in capitals.
 
 ---
 
@@ -201,7 +201,9 @@ so in capitals.
 - **`ECONNREFUSED`** — wrong address, or AWJ is not on 10606. Check you can reach
   the device's web interface first.
 - **`NO_VPU_SUBTREE`** — it connected, but the device exposes no `$vpuMixer`
-  collection. The LivePremier simulator behaves exactly this way: it has no
-  processor boards to map. Not a bug, and not something a capture can fix.
+  collection. Firmware 6.1.x answers this way on hardware (an Aquilon RS4 on
+  6.1.60, screens on air), and so do some simulator sessions; the device's own
+  `isSimulated` and firmware say which, and the app's banner names them. Not a
+  bug, and not something a capture can fix — there is no mixer map to capture.
 - **Anything else** — the error is printed and nothing is written, on either side.
   The device is not left in a different state than you found it.

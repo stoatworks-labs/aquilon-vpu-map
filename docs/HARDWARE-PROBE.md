@@ -21,9 +21,12 @@ grid, or only *what* each mixer serves?
   be right: a row is one layer-capacity link carrying one layer, the links a layer
   spends are its capability, and a layer past four output links wraps — so only the
   order down the field is derived, and it follows the mixer allocation order.
-- **`$vpuLayer` and `$pipe` answer `E12` on hardware.** They exist but are permanently
-  empty on the simulator — the two implementations expose different collections
-  (hardware: `vpuMixerList` only; simulator: `pipeList` + `vpuLayerList` only).
+- **`$vpuLayer` and `$pipe` answer `E12` on 6.2 hardware.** They exist but are empty
+  on the August simulator — and on an Aquilon RS4 at 6.1.60 (2026-10-16), which has
+  `pipeList` + `vpuLayerList` only, every scaler at its defaults, and no
+  `vpuMixerList`. The collections follow the firmware, not hardware-or-simulator
+  (6.2 hardware: `vpuMixerList` only; 6.1.60 hardware and that simulator:
+  `pipeList` + `vpuLayerList` only).
 - CORS: no `Access-Control-Allow-Origin`, port 443 closed. The hosting question is
   closed — a browser-only tool cannot reach a device.
 - New prop found in passing: **`cutnfillCapa`** (`OFF` throughout on this chassis).
@@ -122,9 +125,13 @@ This *looked* like the grid: eight scalers per VPU (the layer links, the rows), 
 declaring which of eight output pipes it drives (the columns), with
 `PROC_1_SCALER_9` answering `E12` to confirm 8 per VPU.
 
-It is not. **On hardware the whole collection answers `E12`** — it does not exist. On
-the simulator it exists and is permanently empty. The step is kept so that a firmware
-which starts populating it announces itself.
+It is not. **On 6.2 hardware the whole collection answers `E12`** — it does not
+exist. On 6.1.60 hardware (an Aquilon RS4, three screens on air) it exists and every
+scaler reads `isAvailable`/`isEnabled` false, `capability` OFF, `usedInScreen` S1,
+`usedInLayer` NATIVE and every `usedOnOutPipe` NONE — the enums' first values, never
+set — and the vendor's own 6.1.60 page never reads it. The August simulator was the
+same. The step is kept so that a firmware which starts populating it announces
+itself.
 
 **If it ever does populate**, it supersedes the derived row order: map scaler → row,
 `usedOnOutPipe<n>` → columns, and drop the ordering in `buildLinkGrid()` to a
