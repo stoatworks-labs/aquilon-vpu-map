@@ -160,6 +160,7 @@ above, not a fault to chase.
 **It says "This firmware does not report its VPU allocation".** LivePremier firmware 6.1.x has no
 mixer map — an Aquilon RS4 on 6.1.60 with its screens on air answers that way. There's no chassis
 or grid to draw, so the app shows what the box does say instead: each screen's layers by size,
-and how many more of each size the box has room for in the staged configuration. The room is the
-whole box's, so every screen shows the same figure. A simulator that reports no map says "No VPU
-on this simulator" instead; the app asks the device which it is rather than guessing.
+and how many more of each size the box has room for in the staged configuration. Every screen
+reports the same room — it's the whole box's — so the app gives it once, under the screens, rather
+than inviting you to add it up. A simulator that reports no map says "No VPU on this simulator"
+instead; the app asks the device which it is rather than guessing.
