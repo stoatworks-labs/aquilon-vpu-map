@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 — 2026-10-16
 
 **A box with no mixer map is no longer called a simulator.** An Aquilon RS4 on firmware
 6.1.60, three screens on air, answers `E12` for `$vpuMixer`, and the app told the operator
