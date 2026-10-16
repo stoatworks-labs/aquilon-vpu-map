@@ -165,14 +165,17 @@ pub fn screen_layers(a: &mut Awj, which: &str, status: &Value) -> Value {
                 Some(_) => {}
             }
         }
-        let mut room = Vec::new();
+        // None where the screen reports no room at all, so "no figure" never
+        // reads as "no room" — the running side, or no `$layerCapability`.
+        let mut room: Option<Vec<Value>> = None;
         if which == "new" {
             for capa in LAYER_CAPABILITIES {
                 let c = format!("{b}/$layerCapability/@items/{capa}/status/@props");
-                let count = a
-                    .try_get(&format!("{c}/remainingLayerCapabilities"))
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0);
+                let Some(raw) = a.try_get(&format!("{c}/remainingLayerCapabilities")) else {
+                    continue; // not a capability this box lists
+                };
+                let room = room.get_or_insert_with(Vec::new);
+                let count = raw.as_u64().unwrap_or(0);
                 if count == 0 {
                     continue;
                 }

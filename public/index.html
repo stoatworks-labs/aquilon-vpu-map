@@ -79,13 +79,14 @@
     <div class="head">
       <h2>What this firmware does report</h2>
       <p>
-        No mixer map, but each screen in service still says what it spends: its layers
-        by size, and in the staged configuration, how many more of each size the box
-        has room for. The room is the box&rsquo;s pool seen from each screen, so every
-        screen shows the same figure.
+        No mixer map, but each screen in service still says what it spends &mdash; its
+        layers by size &mdash; and, in the staged configuration, how many more of each
+        size there is room for. Every screen has reported the same room: it is the
+        box&rsquo;s, so it is given once, not added up per screen.
       </p>
     </div>
     <div class="sstats" id="reportedScreens"></div>
+    <p class="pool" id="reportedPool" hidden></p>
   </section>
 
   <main id="results" hidden>

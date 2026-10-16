@@ -443,6 +443,8 @@ svg.vpu .hook { fill:none; stroke:var(--warn); stroke-width:1.5; }
   letter-spacing:.07em; text-transform:uppercase; color:var(--ink-soft);
 }
 .sstat.over .snote { color:var(--bad); }
+.pool { margin:0; font-size:14px; color:var(--ink-mid); font-variant-numeric:tabular-nums; }
+.pool b { color:var(--ink); font-weight:600; }
 .badge {
   align-self:flex-start; font-family:"IBM Plex Mono",ui-monospace,monospace;
   font-size:9.5px; letter-spacing:.11em; text-transform:uppercase;

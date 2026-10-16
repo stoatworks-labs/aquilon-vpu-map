@@ -303,7 +303,7 @@ fn screen_layers_reads_sizes_and_the_staged_room() {
         cur["S1"],
         serde_json::json!({
             "layers": [{ "layer": "1", "capability": "4K" }, { "layer": "2", "capability": "4K" }],
-            "room": []
+            "room": null
         })
     );
     let nw = crate::read::screen_layers(&mut a, "new", &staged);

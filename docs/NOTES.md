@@ -618,8 +618,11 @@ is the same fix here. Everything below was read off the RS4 read-only (field kit
   `4K`/`DUAL`/`OFF`; read until `layerCount` non-OFF ones are found, so S1 costs three
   reads, not 257. Staged only: `$layerCapability/@items/<DUAL|4K|3|5K>/status/@props/
   {remainingLayerCapabilities,remainingLayerWithMaskCapabilities}` — 15/7, 7/3, 0/0,
-  3/0 on S1, S2 and S3 alike at 11:32 (19/9/4 at 17:59), so it is the box's pool. `3` is
-  always 0 and dropped, not named. The AWJ spellings (`$layer`, `$layerCapability`)
+  3/0 on S1, S2 and S3 alike at 11:32 (19/9/4 at 17:59), so it is the box's pool, and
+  the page says it once (as LivePremier Plus does since d450ed7) rather than on every
+  card; screens that disagree keep their own. `3` is always 0 and dropped: a
+  capacity-3 layer (position is capacity in LAYER_CAPABILITIES), which 6.1.60 does
+  not offer. A screen with no `$layerCapability` reads `room: null`, not `[]`. The AWJ spellings (`$layer`, `$layerCapability`)
   follow the mechanical rule from the store's `layerList`/`layerCapabilityList`.
 - **The bridge** reads those only when `$vpuMixer` is absent and answers `ok: false`,
   `NO_VPU_SUBTREE`, with `title`, `hint`, `source` (identity included), `screenStatus`,

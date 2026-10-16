@@ -332,8 +332,8 @@ test('readScreenLayers reads each screen’s layer sizes, and the staged room', 
     const cur = await readScreenLayers(client, { which: 'current', status: running });
     assert.deepEqual(cur.S1, {
       layers: [{ layer: '1', capability: '4K' }, { layer: '2', capability: '4K' }],
-      room: [],
-    }, 'room is the staged side’s alone');
+      room: null,
+    }, 'room is the staged side’s alone, and no figure is null, not "no room"');
     assert.deepEqual(cur.S3.layers, [{ layer: '1', capability: 'DUAL' }]);
 
     const nw = await readScreenLayers(client, { which: 'new', status: staged });

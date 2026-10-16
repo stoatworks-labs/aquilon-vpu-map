@@ -11,9 +11,10 @@ does not report its VPU allocation, naming the box and the version; a simulator 
 it is one; anything else gets a sentence that claims neither.
 
 - **What 6.1.x does report is shown.** Each screen in service, with its layers by size
-  ("4K ×2") and, staged, the room left by size ("room for 15 DUAL · 7 4K · 3 5K") — the
-  box's one pool as seen from each screen. Read only when there is no mixer map, so a
-  6.2 read costs what it did.
+  ("4K ×2"), and, staged, the room left by size ("15 DUAL · 7 4K · 3 5K") — said once
+  as the box's when every screen agrees, as they did on the RS4, since a figure on
+  every card invites adding it up. Read only when there is no mixer map, so a 6.2 read
+  costs what it did.
 - The status line names the firmware, and "simulator" when the device says it is one.
 - Same in the desktop app (`read.rs`), word for word; both suites pin the sentence.
 

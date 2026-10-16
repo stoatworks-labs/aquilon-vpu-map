@@ -33,6 +33,7 @@ const els = {
   banner: $('banner'),
   reported: $('reported'),
   reportedScreens: $('reportedScreens'),
+  reportedPool: $('reportedPool'),
   results: $('results'),
   stats: $('stats'),
   chassis: $('chassis'),
@@ -774,6 +775,21 @@ function renderScreenStatus(screenStatus, stagedStatus, colours) {
   return { exceeding };
 }
 
+/**
+ * The room every screen agrees on, or null. On the RS4 every screen in service
+ * reported the same room — the box's pool seen from each — so it is said once:
+ * repeated on every card it invites adding up. Screens that disagree keep
+ * their own, since the pooling is observed, not documented.
+ */
+function sharedRoom(screens) {
+  const rooms = Object.values(screens || {}).map((s) => s.room).filter((r) => r != null);
+  if (!rooms.length) return null;
+  return rooms.every((r) => JSON.stringify(r) === JSON.stringify(rooms[0])) ? rooms[0] : null;
+}
+
+const roomText = (room) => room.map((r) => `${r.layers} ${r.capability}`).join(' \u00b7 ') || 'none';
+const maskText = (room) => room.map((r) => `${r.withMask} ${r.capability}`).join(' \u00b7 ');
+
 /** A screen's layers by size, in the order they first appear: "4K ×2, DUAL". */
 function layerSizes(layers) {
   const counts = new Map();
@@ -796,14 +812,20 @@ function renderReported(body) {
     return;
   }
   const colours = new Map(entries.map(([id], i) => [id, `c${(i % 6) + 1}`]));
+  const pool = sharedRoom(layers.new);
   els.reported.hidden = false;
+  els.reportedPool.hidden = !pool;
+  els.reportedPool.replaceChildren(...(pool
+    ? [el('b', { text: 'Room left on the box, shared by every screen: ' }), roomText(pool),
+      pool.length ? ` (with a mask: ${maskText(pool)})` : '']
+    : []));
   els.reportedScreens.replaceChildren(
     ...entries.map(([id, st]) => {
       const running = (layers.current || {})[id] || { layers: [] };
-      const staged = (layers.new || {})[id] || { layers: [], room: [] };
+      const staged = (layers.new || {})[id] || { layers: [], room: null };
       const sizes = layerSizes(running.layers);
       const stagedSizes = layerSizes(staged.layers);
-      const room = staged.room || [];
+      const room = staged.room;
       return el(
         'div',
         { class: `sstat ${colours.get(id)}` },
@@ -823,14 +845,10 @@ function renderReported(body) {
         stagedSizes !== sizes
           ? el('span', { class: 'sfig', text: `staged: ${stagedSizes || 'no layers'}` })
           : null,
-        el('span', {
+        pool || !room ? null : el('span', {
           class: 'snote',
-          title: room.length
-            ? 'With a mask: ' + room.map((r) => `${r.withMask} ${r.capability}`).join(' \u00b7 ')
-            : null,
-          text: room.length
-            ? 'room for ' + room.map((r) => `${r.layers} ${r.capability}`).join(' \u00b7 ')
-            : 'no room reported',
+          title: room.length ? `With a mask: ${maskText(room)}` : null,
+          text: `room for ${roomText(room)}`,
         }),
       );
     }),
