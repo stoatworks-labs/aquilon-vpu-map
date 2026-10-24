@@ -358,7 +358,7 @@ that DOES consume mixers and IS counted by `layerCount`. Call it the **native la
   bundle, `isolated-app://` origin, Chrome flags or enterprise policy, plus a WebRTC
   bridge to reach it from a normal page. Heavier than the launcher for the same result.
 
-**Fleet finding, spun off as a task:** `otter-edid-editor` and `atem-scopes` ship a
+**Fleet finding, spun off as a task:** `edid-editor` and `atem-scopes` ship a
 **stale `docker/stoatworks-headers.conf`** whose CSP `connect-src` lacks
 `https://intake.stoatworks-labs.com` — their in-app feedback reports are being **silently
 dropped in PROD only**. Regenerating fixes it; I reverted rather than commit to other repos.
