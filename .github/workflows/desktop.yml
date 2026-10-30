@@ -37,7 +37,7 @@ jobs:
           # universal-apple-darwin is a Tauri bundling target and NOT a rustup
           # one, so the toolchain step installs `rust_targets` instead; `target`
           # stays what tauri-action is given.
-          - platform: macos-14
+          - platform: macos-15
             target: universal-apple-darwin
             rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
             name: macOS (universal)
