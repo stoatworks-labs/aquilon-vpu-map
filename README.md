@@ -12,6 +12,8 @@
 A map of how an Analog Way **LivePremier** has handed out its VPU mixers across
 screens, layers and slices.
 
+The [project page](https://stoatworks-labs.com/software/aquilon-vpu-map/) has the downloads and the [user guide](https://stoatworks-labs.com/software/aquilon-vpu-map/guide/).
+
 Every layer on a LivePremier costs physical mixing hardware. The device knows where
 every bit of it went and will happily tell you, but the stock Web RCS only shows it a
 panel at a time. This puts the whole chassis on one screen.
